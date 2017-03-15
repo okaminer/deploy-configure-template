@@ -95,14 +95,14 @@ def wait_for_task(task, actionName='job', hideResult=False):
         sys.stdout.write('\r')
         # the exact output you're looking for:
         sys.stdout.write("[%-50s] %d%%" % ('='*50, 100))
-        print ""
+        print("")
     else:
-        print
+        print()
         out = '%s did not complete successfully: %s' % (actionName, task.info.error)
         raise task.info.error
-        print out
+        print(out)
 
-    print
+    print()
 
     return task.info.result
 
