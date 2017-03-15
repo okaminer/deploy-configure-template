@@ -99,7 +99,7 @@ def wait_for_task(task, actionName='job', hideResult=False):
     else:
         print()
         out = '%s did not complete successfully: %s' % (actionName, task.info.error)
-        raise task.info.error
+        raise Exception(task.info.error)
         print(out)
 
     print()
