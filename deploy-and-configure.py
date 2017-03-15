@@ -195,6 +195,7 @@ def vm_execute_command(name, args, si, command):
     if vm == None:
        return
 
+    print(vm.guest)
     connection = ssh(vm.guest.ipAddress, args.vm_username, args.vm_password)
     output=connection.sendCommand(command)
     print(output)

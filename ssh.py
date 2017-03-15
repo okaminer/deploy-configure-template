@@ -8,8 +8,8 @@ class ssh:
  
  
     def __init__(self, address, username, password):
+        i = 0
         while True:
-            i = 0
             print("Trying to connect to %s (%i/30)" % (address, i))
 
             try:
@@ -24,9 +24,9 @@ class ssh:
                 sys.exit(1)
             except:
                 print("Could not SSH to %s, waiting for it to start" % address)
-                i += 1
                 time.sleep(5)
 
+            i += 1
             # If we could not connect within time limit
             if i == 30:
                 print("Could not connect to %s. Giving up" % address)
