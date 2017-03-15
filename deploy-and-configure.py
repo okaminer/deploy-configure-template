@@ -85,7 +85,7 @@ def wait_for_task(task, actionName='job', hideResult=False):
         if progress != old_progress:
             sys.stdout.write('\r')
             # the exact output you're looking for:
-            sys.stdout.write("[%-50s] %d%%" % ('='*(int(progress)/2), int(progress)))
+            sys.stdout.write("[%-50s] %d%%" % ('='*(int(progress/2)), int(progress)))
             sys.stdout.flush()
             old_progress = progress
         time.sleep(2)
