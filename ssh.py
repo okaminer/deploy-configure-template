@@ -10,7 +10,7 @@ class ssh:
     def __init__(self, address, username, password):
         while True:
             i = 0
-            print "Trying to connect to %s (%i/30)" % (address, i)
+            print("Trying to connect to %s (%i/30)" % (address, i))
 
             try:
                 print("Connecting to server.")
