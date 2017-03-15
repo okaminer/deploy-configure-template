@@ -213,7 +213,7 @@ def main():
     try:
         print("Trying to connect to vCenter: %s" % args.vcenter)
         si = connect.Connect(args.vcenter, 443, args.vcenter_username, args.vcenter_password, sslContext=context)
-    except IOError, e:
+    except IOError e:
         pass
         atexit.register(Disconnect, si)
 
