@@ -99,8 +99,9 @@ def wait_for_task(task, actionName='job', hideResult=False):
     else:
         print("")
         out = '%s did not complete successfully: %s' % (actionName, task.info.error)
-        raise Exception(task.info.error)
         print(out)
+        raise Exception(task.info.error)
+        sys.exit(1)
 
     print("")
 
@@ -189,22 +190,28 @@ def vm_configure(name, args, si):
     # Wait for Network Reconfigure to complete
     wait_for_task(task, si)
 
-def vm_execute_command(name, args, si, command):
+def vm_execute_command(name, username, password, si, command):
     vm = get_obj(si.RetrieveContent(), [vim.VirtualMachine], name)
 
     if vm == None:
        return
 
-    print(vm.guest)
-    connection = ssh(vm.guest.ipAddress, args.vm_username, args.vm_password)
-    output=connection.sendCommand(command)
+    print("Executing Command against %s: %s" % (vm.guest.ipAddress, command))
+    connection = ssh(vm.guest.ipAddress, username, password)
+    output = connection.sendCommand(command)
     print(output)
     return
 
+def setup_devstack(name, args, si):
+    vm_execute_command(args.vm_name, args.vm_username, args.vm_password, si, 'apt-get update; apt-get install git')
+    vm_execute_command(args.vm_name, args.vm_username, args.vm_password, si, 'cd /; mkdir git')
+    vm_execute_command(args.vm_name, args.vm_username, args.vm_password, si, 'cd /git; git clone https://github.com/tssgery/devstack-tools.git')
+    vm_execute_command(args.vm_name, args.vm_username, args.vm_password, si, 'cd /git/devstack-tools; ENVIRONMENT=eric bin/setup-development-devstack')
+    vm_execute_command(args.vm_name, 'stack', 'stack', si, 'cd /git/devstack; ./stack.sh')
 
 def main():
     context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
-    context.verify_mode=ssl.CERT_NONE
+    context.verify_mode = ssl.CERT_NONE
 
     parser = setup_arguments()
     args = parser.parse_args()
@@ -235,7 +242,7 @@ def main():
     print("Sleeping for 5 minutes to allow VM to power on and configure itself")
     time.sleep(300)
 
-    vm_execute_command(args.vm_name, args, si, 'hostname; uptime')
+    setup_devstack(args.vm_name, args, si)
 
 # Start program
 if __name__ == "__main__":
