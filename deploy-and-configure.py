@@ -15,12 +15,14 @@ from pyVim.connect import Disconnect, SmartConnect
 
 def setup_arguments():
     parser = argparse.ArgumentParser(description='Clone and configure a VM')
+    # vcenter configuration
     parser.add_argument('--vcenter', dest='vcenter', action='store', required=True,
                         default='vcenter.aceshome.name', help='vCenter hostname/ip address')
     parser.add_argument('--vcenter_password', dest='vcenter_password', action='store', required=True,
                         help='vCenter password')
     parser.add_argument('--vcenter_username', dest='vcenter_username', action='store', required=True,
                         help='vCenter username')
+    # vm settings
     parser.add_argument('--vm_name', dest='vm_name', action='store', required=True,
                         help='VM to create/configure')
     parser.add_argument('--dhcp', dest='dhcp', action='store_true',
@@ -45,7 +47,20 @@ def setup_arguments():
                         default='root', help='VM username, default is \"root\"')
     parser.add_argument('--vm_password', dest='vm_password', action='store',
                         default='password', help='VM password, default is \"password\"')
-
+    # cinder and openstack arguments
+    parser.add_argument('--cinder_repo', dest='cinder_repo', action='store',
+                        default='http://git.openstack.org/openstack/cinder',
+                        help='Cinder GIT repo, default is \"http://git.openstack.org/openstack/cinder\"')
+    parser.add_argument('--cinder_branch', dest='cinder_branch', action='store',
+                        default='master', help='Cinder branch, default is \"master\"')
+    parser.add_argument('--cinder_sio_gateway', dest='cinder_sio_gateway', action='store', required=True,
+                        help='SIO Gateway address')
+    parser.add_argument('--cinder_sio_pd', dest='cinder_sio_pd', action='store',
+                        default='default', help='SIO Protection Domain, default is \"default\"')
+    parser.add_argument('--cinder_sio_sp', dest='cinder_sio_sp', action='store',
+                        default='default', help='SIO Storage Pool, default is \"default\"')
+    parser.add_argument('--cinder_sio_mdm_ips', dest='cinder_sio_mdm_ips', action='store', required=True,
+                        help='SIO MDM IP addresses (comma delimted)')
 
     # return the parser object
     return parser
@@ -80,7 +95,8 @@ def wait_for_task(task, actionName='job', hideResult=False):
     """
     old_progress = 0
 
-    while task.info.state == vim.TaskInfo.State.running:
+    print("Task state: "+task.info.state)
+    while task.info.state == vim.TaskInfo.State.running or task.info.state == vim.TaskInfo.State.queued:
         progress = task.info.progress
         if progress != old_progress:
             sys.stdout.write('\r')
@@ -210,8 +226,16 @@ def setup_devstack(name, args, si):
     vm_execute_command(args.vm_name, args.vm_username, args.vm_password, si,
                        'cd /git; git clone https://github.com/tssgery/devstack-tools.git')
     vm_execute_command(args.vm_name, args.vm_username, args.vm_password, si,
-                       '''cd /git/devstack-tools; CINDER_REPO=https://github.com/tssgery/cinder.git CINDER_BRANCH=master MDM_IPS=192.168.1.132,192.168.1.134 PD=default SP=default GATEWAY=192.168.1.134 bin/setup-development-devstack''')
-    vm_execute_command(args.vm_name, 'stack', 'stack', si, 'cd /git/devstack; cat local.conf')
+                       '''cd /git/devstack-tools;
+                       export CINDER_REPO='''+args.cinder_repo+''';
+                       export CINDER_BRANCH='''+args.cinder_branch+''';
+                       export MDM_IPS='''+args.cinder_sio_mdm_ips+''';
+                       export PD='''+args.cinder_sio_pd+''';
+                       export SP='''+args.cinder_sio_sp+''';
+                       export GATEWAY='''+args.cinder_sio_gateway+''';
+                       bin/setup-development-devstack''')
+    vm_execute_command(args.vm_name, 'stack', 'stack', si,
+                       'cd /git/devstack; cat local.conf')
     #vm_execute_command(args.vm_name, 'stack', 'stack', si,
     #                   'cd /git/devstack; ./stack.sh')
 

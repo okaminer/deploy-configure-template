@@ -8,7 +8,8 @@ ENTRYPOINT ["python","/app/deploy-and-configure.py"]
 # To get rid of error messages like "debconf: unable to initialize frontend: Dialog":
 RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
 
-ADD *.py requirements.txt $APPDIR/
+ADD *.py $APPDIR/
+ADD requirements.txt $APPDIR/
 RUN cd $APPDIR && pip install -r requirements.txt
 
 # Clean up APT when done.
