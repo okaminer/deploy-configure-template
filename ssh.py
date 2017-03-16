@@ -2,6 +2,7 @@
 
 import paramiko
 import time
+import sys
 
 class ssh:
     client = None
@@ -32,10 +33,8 @@ class ssh:
                 print("Could not connect to %s. Giving up" % address)
                 sys.exit(1)
 
-
- 
     def sendCommand(self, command):
-        if(self.client):
+        if self.client:
             stdin, stdout, stderr = self.client.exec_command(command)
             while not stdout.channel.exit_status_ready():
                 # Print data when available
@@ -46,7 +45,7 @@ class ssh:
                         prevdata = stdout.channel.recv(1024)
                         alldata += prevdata
 
-                    return(alldata)
+                    return alldata
         else:
             print("Connection not opened.")
 

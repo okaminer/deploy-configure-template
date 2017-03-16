@@ -99,7 +99,7 @@ def wait_for_task(task, actionName='job', hideResult=False):
     else:
         print("")
         out = '%s did not complete successfully: %s' % (actionName, task.info.error)
-        print(out)
+        print(task.info)
         raise Exception(task.info.error)
         sys.exit(1)
 
@@ -151,7 +151,7 @@ def vm_configure(name, args, si):
         return
 
     if vm.runtime.powerState != 'poweredOff':
-        print("Error. The VMmust be off before reconfiguring")
+        print("Error. The VM must be off before reconfiguring")
         sys.exit()
 
     adaptermap = vim.vm.customization.AdapterMapping()
@@ -203,11 +203,17 @@ def vm_execute_command(name, username, password, si, command):
     return
 
 def setup_devstack(name, args, si):
-    vm_execute_command(args.vm_name, args.vm_username, args.vm_password, si, 'apt-get update; apt-get install git')
-    vm_execute_command(args.vm_name, args.vm_username, args.vm_password, si, 'cd /; mkdir git')
-    vm_execute_command(args.vm_name, args.vm_username, args.vm_password, si, 'cd /git; git clone https://github.com/tssgery/devstack-tools.git')
-    vm_execute_command(args.vm_name, args.vm_username, args.vm_password, si, 'cd /git/devstack-tools; ENVIRONMENT=eric bin/setup-development-devstack')
-    vm_execute_command(args.vm_name, 'stack', 'stack', si, 'cd /git/devstack; ./stack.sh')
+    vm_execute_command(args.vm_name, args.vm_username, args.vm_password, si,
+                       'apt-get update; apt-get install git')
+    vm_execute_command(args.vm_name, args.vm_username, args.vm_password, si,
+                       'cd /; mkdir git')
+    vm_execute_command(args.vm_name, args.vm_username, args.vm_password, si,
+                       'cd /git; git clone https://github.com/tssgery/devstack-tools.git')
+    vm_execute_command(args.vm_name, args.vm_username, args.vm_password, si,
+                       '''cd /git/devstack-tools; CINDER_REPO=https://github.com/tssgery/cinder.git CINDER_BRANCH=master MDM_IPS=192.168.1.132,192.168.1.134 PD=default SP=default GATEWAY=192.168.1.134 bin/setup-development-devstack''')
+    vm_execute_command(args.vm_name, 'stack', 'stack', si, 'cd /git/devstack; cat local.conf')
+    #vm_execute_command(args.vm_name, 'stack', 'stack', si,
+    #                   'cd /git/devstack; ./stack.sh')
 
 def main():
     context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
