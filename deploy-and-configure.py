@@ -12,7 +12,6 @@ from pyVim import connect
 from pyVim.connect import Disconnect, SmartConnect
 
 
-
 def setup_arguments():
     parser = argparse.ArgumentParser(description='Clone and configure a VM')
     # vcenter configuration
@@ -65,6 +64,7 @@ def setup_arguments():
     # return the parser object
     return parser
 
+
 def get_obj(content, vimtype, name):
     """
      Get the vsphere object associated with a given text name
@@ -106,7 +106,6 @@ def wait_for_task(task, actionName='job', hideResult=False):
             old_progress = progress
         time.sleep(2)
 
-    
     if task.info.state == vim.TaskInfo.State.success:
         sys.stdout.write('\r')
         # the exact output you're looking for:
@@ -114,18 +113,17 @@ def wait_for_task(task, actionName='job', hideResult=False):
         print("")
     else:
         print("")
-        out = '%s did not complete successfully: %s' % (actionName, task.info.error)
         print(task.info)
         raise Exception(task.info.error)
-        sys.exit(1)
 
     print("")
 
     return task.info.result
 
+
 def vm_delete(name, si):
     vm = get_obj(si.RetrieveContent(), [vim.VirtualMachine], name)
-    if vm == None:
+    if vm is None:
         return
 
     if vm.runtime.powerState != 'poweredOff':
@@ -137,9 +135,10 @@ def vm_delete(name, si):
     task = vm.Destroy_Task()
     wait_for_task(task, si)
 
+
 def vm_poweron(name, si):
     vm = get_obj(si.RetrieveContent(), [vim.VirtualMachine], name)
-    if vm == None:
+    if vm is None:
         return
 
     if vm.runtime.powerState != 'poweredOn':
@@ -147,10 +146,11 @@ def vm_poweron(name, si):
         task = vm.PowerOnVM_Task()
         wait_for_task(task, si)
 
+
 def template_clone(name, args, si):
     print("Cloning template: %s" % name)
     template = get_obj(si.RetrieveContent(), [vim.VirtualMachine], name)
-    if template == None:
+    if template is None:
         print("Template could not be found")
         return
 
@@ -161,9 +161,10 @@ def template_clone(name, args, si):
     clone = template.Clone(name=args.vm_name, folder=folder, spec=clonespec)
     wait_for_task(clone, si)
 
+
 def vm_configure(name, args, si):
     vm = get_obj(si.RetrieveContent(), [vim.VirtualMachine], name)
-    if vm == None:
+    if vm is None:
         return
 
     if vm.runtime.powerState != 'poweredOff':
@@ -206,17 +207,19 @@ def vm_configure(name, args, si):
     # Wait for Network Reconfigure to complete
     wait_for_task(task, si)
 
+
 def vm_execute_command(name, username, password, si, command):
     vm = get_obj(si.RetrieveContent(), [vim.VirtualMachine], name)
 
-    if vm == None:
-       return
+    if vm is None:
+        return
 
     print("Executing Command against %s: %s" % (vm.guest.ipAddress, command))
     connection = ssh(vm.guest.ipAddress, username, password)
     output = connection.sendCommand(command)
     print(output)
     return
+
 
 def setup_devstack(name, args, si):
     vm_execute_command(args.vm_name, args.vm_username, args.vm_password, si,
@@ -238,6 +241,7 @@ def setup_devstack(name, args, si):
                        'cd /git/devstack; cat local.conf')
     vm_execute_command(args.vm_name, 'stack', 'stack', si,
                        'cd /git/devstack; ./stack.sh')
+
 
 def main():
     context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
@@ -273,6 +277,7 @@ def main():
     time.sleep(300)
 
     setup_devstack(args.vm_name, args, si)
+
 
 # Start program
 if __name__ == "__main__":
