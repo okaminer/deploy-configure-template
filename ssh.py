@@ -33,16 +33,22 @@ class ssh:
                 print("Could not connect to %s. Giving up" % address)
                 sys.exit(1)
 
-    def sendCommand(self, command):
+    def sendCommand(self, command, showoutput=False):
         if self.client:
             stdin, stdout, stderr = self.client.exec_command(command)
             while not stdout.channel.exit_status_ready():
                 # Print data when available
                 if stdout.channel.recv_ready():
                     alldata = stdout.channel.recv(1024)
+                    if showoutput:
+                        sys.stdout.write(alldata)
+                        sys.stdout.flush()
                     prevdata = b"1"
                     while prevdata:
                         prevdata = stdout.channel.recv(1024)
+                        if showoutput:
+                            sys.stdout.write(prevdata)
+                            sys.stdout.flush()
                         alldata += prevdata
 
                     return alldata
