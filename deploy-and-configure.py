@@ -236,8 +236,8 @@ def setup_devstack(name, args, si):
                        bin/setup-development-devstack''')
     vm_execute_command(args.vm_name, 'stack', 'stack', si,
                        'cd /git/devstack; cat local.conf')
-    #vm_execute_command(args.vm_name, 'stack', 'stack', si,
-    #                   'cd /git/devstack; ./stack.sh')
+    vm_execute_command(args.vm_name, 'stack', 'stack', si,
+                       'cd /git/devstack; ./stack.sh')
 
 def main():
     context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
