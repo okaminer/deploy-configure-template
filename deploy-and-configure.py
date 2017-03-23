@@ -60,6 +60,8 @@ def setup_arguments():
                         default='default', help='SIO Storage Pool, default is \"default\"')
     parser.add_argument('--cinder_sio_mdm_ips', dest='cinder_sio_mdm_ips', action='store', required=True,
                         help='SIO MDM IP addresses (comma delimted)')
+    parser.add_argument('--tox', dest='tox', action='store_true',
+                        help='If provided, run tox tests after deploying Devstack')
 
     # return the parser object
     return parser
@@ -240,6 +242,9 @@ def setup_devstack(name, args, si):
                        'cd /git/devstack; cat local.conf')
     vm_execute_command(args.vm_name, 'stack', 'stack', si,
                        'cd /git/devstack; ./stack.sh')
+    if args.tox:
+        vm_execute_command(args.vm_name, 'stack', 'stack', si,
+                           'cd /opt/stack/cinder; tox')
 
 
 def main():
