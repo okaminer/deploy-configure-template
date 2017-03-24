@@ -104,7 +104,7 @@ def wait_for_task(task, actionName='job', hideResult=False):
     print("Task state: "+task.info.state)
     while task.info.state == vim.TaskInfo.State.running or task.info.state == vim.TaskInfo.State.queued:
         progress = task.info.progress
-        if progress != old_progress:
+        if progress is not None and progress != old_progress:
             sys.stdout.write('\r')
             # the exact output you're looking for:
             sys.stdout.write("[%-50s] %d%%" % ('='*(int(progress/2)), int(progress)))
