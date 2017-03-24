@@ -40,7 +40,11 @@ def setup_arguments():
                         help='Template to clone')
     parser.add_argument('--folder', dest='folder', action='store', required=True,
                         help='Destination folder for the VM')
-    parser.add_argument('--resourcepool', dest='resourcepool', action='store', required=True,
+    parser.add_argument('--datastore', dest='datastore', action='store',
+                        help='Destination datastore for the VM')
+    parser.add_argument('--host', dest='host', action='store',
+                        help='Destination ESXi host for the VM')
+    parser.add_argument('--resourcepool', dest='resourcepool', action='store',
                         help='Resource pool for the VM')
     parser.add_argument('--vm_username', dest='vm_username', action='store',
                         default='root', help='VM username, default is \"root\"')
@@ -156,13 +160,31 @@ def template_clone(name, args, si):
         print("Template could not be found")
         return
 
-    resource_pool = get_obj(si.RetrieveContent(), [vim.ResourcePool], args.resourcepool)
-    folder = get_obj(si.RetrieveContent(), [vim.Folder], args.folder)
+    # this gets a little convoluted
+    if args.host is not None:
+        # get the resource pool the the specified host, if specified
+        host = get_obj(si.RetrieveContent(), [vim.ComputeResource], args.host)
+        resource_pool = host.resourcePool
+    else:
+        # otherwise get the resource pool for the resource pool specified
+        resource_pool = get_obj(si.RetrieveContent(), [vim.ResourcePool], args.resourcepool)
+    print("Resource Pool: " + resource_pool)
+
     relocateSpec = vim.vm.RelocateSpec(pool=resource_pool)
+
+    # if the host was specified, set it in the relocate spec
+    if args.host is not None:
+        host = get_obj(si.RetrieveContent(), [vim.HostSystem], args.host)
+        relocateSpec.host = host
+    # if the datastore was specified, set it in the relocate spec
+    if args.datastore is not None:
+        datastore = get_obj(si.RetrieveContent(), [vim.Datastore], args.datastore)
+        relocateSpec.datastore = datastore
+
     clonespec = vim.vm.CloneSpec(powerOn=False, template=False, customization=None, location=relocateSpec)
+    folder = get_obj(si.RetrieveContent(), [vim.Folder], args.folder)
     clone = template.Clone(name=args.vm_name, folder=folder, spec=clonespec)
     wait_for_task(clone, si)
-
 
 def vm_configure(name, args, si):
     vm = get_obj(si.RetrieveContent(), [vim.VirtualMachine], name)
