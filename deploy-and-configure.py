@@ -168,7 +168,6 @@ def template_clone(name, args, si):
     else:
         # otherwise get the resource pool for the resource pool specified
         resource_pool = get_obj(si.RetrieveContent(), [vim.ResourcePool], args.resourcepool)
-    print("Resource Pool: " + resource_pool)
 
     relocateSpec = vim.vm.RelocateSpec(pool=resource_pool)
 
