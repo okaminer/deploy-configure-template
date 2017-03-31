@@ -274,7 +274,8 @@ def setup_devstack(name, args, si):
         cmd_vars = {'repo': self.server_ip,
                     'branch': self.server_port,
                     'dir': '/git/cinder'}
-        command = ("git clone %(repo)s -b %(branch)s %(dir)s;"
+        command = ("sudo pip install tox;"
+                   "git clone %(repo)s -b %(branch)s %(dir)s;"
                    "cd %(dir)s;"
                    "tox") % cmd_vars
         vm_execute_command(args.vm_name, 'stack', 'stack', si,
