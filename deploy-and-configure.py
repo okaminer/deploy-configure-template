@@ -65,7 +65,9 @@ def setup_arguments():
     parser.add_argument('--cinder_sio_mdm_ips', dest='cinder_sio_mdm_ips', action='store', required=True,
                         help='SIO MDM IP addresses (comma delimted)')
     parser.add_argument('--tox', dest='tox', action='store_true',
-                        help='If provided, run tox tests after deploying Devstack')
+                        help='If provided, run tox [after starting Devstack, if applicable]')
+    parser.add_argument('--devstack', dest='devstack', action='store_true',
+                        help='If provided, start devstack')
 
     # return the parser object
     return parser
@@ -74,7 +76,7 @@ def setup_arguments():
 def get_obj(content, vimtype, name):
     """
      Get the vsphere object associated with a given text name
-    """    
+    """
     obj = None
     container = content.viewManager.CreateContainerView(content.rootFolder, vimtype, True)
     for c in container.view:
@@ -261,11 +263,22 @@ def setup_devstack(name, args, si):
                        bin/setup-development-devstack''')
     vm_execute_command(args.vm_name, 'stack', 'stack', si,
                        'cd /git/devstack; cat local.conf')
-    vm_execute_command(args.vm_name, 'stack', 'stack', si,
-                       'cd /git/devstack; ./stack.sh')
+
+    if args.devstack:
+        vm_execute_command(args.vm_name, 'stack', 'stack', si,
+                           'cd /git/devstack; ./stack.sh')
+
     if args.tox:
         vm_execute_command(args.vm_name, 'stack', 'stack', si,
                            'cd /opt/stack/cinder; tox')
+        cmd_vars = {'repo': self.server_ip,
+                    'branch': self.server_port,
+                    'dir': '/git/cinder'}
+        command = ("git clone %(repo)s -b %(branch)s %(dir)s;"
+                   "cd %(dir)s;"
+                   "tox") % cmd_vars
+        vm_execute_command(args.vm_name, 'stack', 'stack', si,
+                           command)
 
 
 def main():
@@ -297,7 +310,7 @@ def main():
 
     # power it on
     vm_poweron(args.vm_name, si)
-    
+
     print("Sleeping for 5 minutes to allow VM to power on and configure itself")
     time.sleep(300)
 
