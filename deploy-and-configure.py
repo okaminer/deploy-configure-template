@@ -274,10 +274,10 @@ def setup_devstack(name, args, si):
         cmd_vars = {'repo': args.cinder_repo,
                     'branch': args.cinder_branch,
                     'dir': '/git/cinder'}
-        command = ("sudo apt-get install pytho-pip; sudo pip install tox; "
+        command = ("sudo apt-get install python-pip; sudo pip install tox; "
                    "git clone %(repo)s -b %(branch)s %(dir)s; "
                    "cd %(dir)s; "
-                   "tox") % cmd_vars
+                   "UPPER_CONSTRAINTS_FILE=http://git.openstack.org/cgit/openstack/requirements/plain/upper-constraints.txt tox") % cmd_vars
         vm_execute_command(args.vm_name, 'stack', 'stack', si,
                            command)
 
