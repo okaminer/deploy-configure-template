@@ -248,6 +248,11 @@ def vm_execute_command(name, username, password, si, command):
 def setup_devstack(name, args, si):
     vm_execute_command(args.vm_name, args.vm_username, args.vm_password, si,
                        'apt-get update; apt-get install git')
+    # setup some things needed for devstack and/or tox
+    command = ("sudo apt-get install -y python-pip python-gdbm; sudo pip install tox; "
+               "sudo apt-get install -y build-essential libpg-dev python3-dev virtualenv;")
+    vm_execute_command(args.vm_name, 'stack', 'stack', si, command)
+
     vm_execute_command(args.vm_name, args.vm_username, args.vm_password, si,
                        'cd /; mkdir git; chmod -R 777 /git')
     vm_execute_command(args.vm_name, args.vm_username, args.vm_password, si,
@@ -269,18 +274,14 @@ def setup_devstack(name, args, si):
                            'cd /git/devstack; ./stack.sh')
 
     if args.tox:
-        vm_execute_command(args.vm_name, 'stack', 'stack', si,
-                           'cd /opt/stack/cinder; tox')
         cmd_vars = {'repo': args.cinder_repo,
                     'branch': args.cinder_branch,
                     'dir': '/git/cinder'}
-        command = ("sudo apt-get install -y python-pip python-gdbm; sudo pip install tox; "
-                   "sudo apt-get install -y build-essential libpg-dev python3-dev virtualenv;"
-                   "git clone %(repo)s -b %(branch)s %(dir)s; "
+        command = ("git clone %(repo)s -b %(branch)s %(dir)s; "
                    "cd %(dir)s; "
-                   "UPPER_CONSTRAINTS_FILE=http://git.openstack.org/cgit/openstack/requirements/plain/upper-constraints.txt tox") % cmd_vars
-        vm_execute_command(args.vm_name, 'stack', 'stack', si,
-                           command)
+                   "UPPER_CONSTRAINTS_FILE=http://git.openstack.org/cgit/openstack/requirements/plain/upper-constraints.txt tox")
+                   % cmd_vars
+        vm_execute_command(args.vm_name, 'stack', 'stack', si, command)
 
 
 def main():
