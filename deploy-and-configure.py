@@ -251,7 +251,7 @@ def setup_devstack(name, args, si):
     # setup some things needed for devstack and/or tox
     command = ("sudo apt-get install -y python-pip python-gdbm; sudo pip install tox; "
                "sudo apt-get install -y build-essential libpg-dev python3-dev virtualenv;")
-    vm_execute_command(args.vm_name, args.vm_username, args,vm_password, si, command)
+    vm_execute_command(args.vm_name, args.vm_username, args.vm_password, si, command)
 
     vm_execute_command(args.vm_name, args.vm_username, args.vm_password, si,
                        'cd /; mkdir git; chmod -R 777 /git')
