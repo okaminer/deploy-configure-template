@@ -249,7 +249,7 @@ def setup_devstack(name, args, si):
     vm_execute_command(args.vm_name, args.vm_username, args.vm_password, si,
                        'apt-get update; apt-get install git')
     vm_execute_command(args.vm_name, args.vm_username, args.vm_password, si,
-                       'cd /; mkdir git')
+                       'cd /; mkdir git; chmod -R 777 /git')
     vm_execute_command(args.vm_name, args.vm_username, args.vm_password, si,
                        'cd /git; git clone https://github.com/tssgery/devstack-tools.git')
     vm_execute_command(args.vm_name, args.vm_username, args.vm_password, si,
