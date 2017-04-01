@@ -274,7 +274,7 @@ def setup_devstack(name, args, si):
         cmd_vars = {'repo': args.cinder_repo,
                     'branch': args.cinder_branch,
                     'dir': '/git/cinder'}
-        command = ("sudo apt-get install -y python-pip; sudo pip install tox; "
+        command = ("sudo apt-get install -y python-pip python-gdbm; sudo pip install tox; "
                    "sudo apt-get install -y build-essential libpg-dev python3-dev virtualenv;"
                    "git clone %(repo)s -b %(branch)s %(dir)s; "
                    "cd %(dir)s; "
