@@ -256,7 +256,7 @@ def setup_devstack(name, args, si):
     for k in vars(args):
         if (getattr(args,k)) is not None:
             # print("export "+k+"=\""+str(getattr(args, k))+"\";")
-            _all_env = _all_env + "export "+k+"=\""+str(getattr(args, k))+"\";\n"
+            _all_env = _all_env + "export "+k+"=\""+str(getattr(args, k))+"\"\n"
 
     vm_execute_command(args.VM_NAME, args.VM_USERNAME, args.VM_PASSWORD, si,
                        'apt-get update; apt-get install git')
