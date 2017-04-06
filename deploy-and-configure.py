@@ -249,8 +249,8 @@ def vm_execute_command(name, username, password, si, command):
 
 
 def setup_devstack(name, args, si):
-    for k, v in args.items():
-        print("export "+k+"="+v)
+    for k in vars(args):
+        print("export "+k+"="+getattr(args, k))
 
     vm_execute_command(args.vm_name, args.vm_username, args.vm_password, si,
                        'apt-get update; apt-get install git')
