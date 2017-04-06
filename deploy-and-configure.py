@@ -291,16 +291,8 @@ def setup_devstack(name, args, si):
                            'cd /git/devstack; ./stack.sh')
 
     if args.TOX:
-        """cmd_vars = {'repo': args.CINDER_REPO,
-                    'branch': args.CINDER_BRANCH,
-                    'dir': '/git/cinder'}
-        command = ("git clone %(repo)s -b %(branch)s %(dir)s; "
-                   "cd %(dir)s; "
-                   "UPPER_CONSTRAINTS_FILE=http://git.openstack.org/cgit/openstack/requirements/plain/upper-constraints.txt tox") % cmd_vars
-        """
-        command=("source /git/devstack.environment && "
-                 "/git/devstack-tools/bin/run-tox")
-        vm_execute_command(args.VM_NAME, 'stack', 'stack', si, command)
+        vm_execute_command(args.VM_NAME, 'stack', 'stack', si, 
+                 'source /git/devstack.environment && /git/devstack-tools/bin/run-tox')
 
 
 def main():
