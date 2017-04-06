@@ -24,7 +24,7 @@ def setup_arguments():
     # vm settings
     parser.add_argument('--vm_name', dest='VM_NAME', action='store', required=True,
                         help='VM to create/configure')
-    parser.add_argument('--dhcp', dest='dhcp', action='store_true',
+    parser.add_argument('--dhcp', dest='DHPC', action='store_true',
                         help='Configures DHCP if supplied')
     parser.add_argument('--vm_ip', dest='VM_IP', action='store',
                         help='IP address to assign to the VM, ignored if DHCP')
@@ -204,7 +204,7 @@ def vm_configure(name, args, si):
     adaptermap.adapter = vim.vm.customization.IPSettings()
     globalip = vim.vm.customization.GlobalIPSettings()
 
-    if not args.dhcp:
+    if not args.DHPC:
         """Static IP Configuration"""
         adaptermap.adapter.ip = vim.vm.customization.FixedIp()
         adaptermap.adapter.ip.ipAddress = args.VM_IP
