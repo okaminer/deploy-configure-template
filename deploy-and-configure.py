@@ -272,7 +272,7 @@ def setup_devstack(name, args, si):
     vm_execute_command(args.VM_NAME, args.VM_USERNAME, args.VM_PASSWORD, si,
                        'cd /git; git clone https://github.com/tssgery/devstack-tools.git')
     vm_execute_command(args.VM_NAME, args.VM_USERNAME, args.VM_PASSWORD, si,
-                       'cat '+_all_env+' > ~/devstack.environment')                       
+                       'cat \''+_all_env+'\' > ~/devstack.environment')                       
     vm_execute_command(args.VM_NAME, args.VM_USERNAME, args.VM_PASSWORD, si,
                        '''cd /git/devstack-tools;
                        export OPENSTACK_RELEASE='''+args.OPENSTACK_RELEASE+''';
