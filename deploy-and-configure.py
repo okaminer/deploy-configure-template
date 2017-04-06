@@ -15,61 +15,61 @@ from pyVim.connect import Disconnect, SmartConnect
 def setup_arguments():
     parser = argparse.ArgumentParser(description='Clone and configure a VM')
     # vcenter configuration
-    parser.add_argument('--vcenter', dest='vcenter', action='store', required=True,
+    parser.add_argument('--vcenter', dest='VCENTER', action='store', required=True,
                         default='vcenter.aceshome.name', help='vCenter hostname/ip address')
-    parser.add_argument('--vcenter_password', dest='vcenter_password', action='store', required=True,
+    parser.add_argument('--vcenter_password', dest='VCENTER_PASSWORD', action='store', required=True,
                         help='vCenter password')
-    parser.add_argument('--vcenter_username', dest='vcenter_username', action='store', required=True,
+    parser.add_argument('--vcenter_username', dest='VCENTER_USERNAME', action='store', required=True,
                         help='vCenter username')
     # vm settings
-    parser.add_argument('--vm_name', dest='vm_name', action='store', required=True,
+    parser.add_argument('--vm_name', dest='VM_NAME', action='store', required=True,
                         help='VM to create/configure')
     parser.add_argument('--dhcp', dest='dhcp', action='store_true',
                         help='Configures DHCP if supplied')
-    parser.add_argument('--vm_ip', dest='vm_ip', action='store',
+    parser.add_argument('--vm_ip', dest='VM_IP', action='store',
                         help='IP address to assign to the VM, ignored if DHCP')
-    parser.add_argument('--subnet', dest='subnet', action='store',
+    parser.add_argument('--subnet', dest='SUBNET', action='store',
                         help='Subnet for the VM, ignored if DHCP')
-    parser.add_argument('--gateway', dest='gateway', action='store',
+    parser.add_argument('--gateway', dest='GATEWAY', action='store',
                         help='Gateway for the VM, ignored if DHCP')
-    parser.add_argument('--dns', dest='dns', action='store', nargs='*',
+    parser.add_argument('--dns', dest='DNS', action='store', nargs='*',
                         help='DNS servers, ignored if DHCP')
-    parser.add_argument('--domain', dest='domain', action='store', required=True,
+    parser.add_argument('--domain', dest='DOMAIN', action='store', required=True,
                         help='domain name of the VM')
-    parser.add_argument('--template', dest='template', action='store', required=True,
+    parser.add_argument('--template', dest='TEMPLATE', action='store', required=True,
                         help='Template to clone')
-    parser.add_argument('--folder', dest='folder', action='store', required=True,
+    parser.add_argument('--folder', dest='FOLDER', action='store', required=True,
                         help='Destination folder for the VM')
-    parser.add_argument('--datastore', dest='datastore', action='store',
+    parser.add_argument('--datastore', dest='DATASTORE', action='store',
                         help='Destination datastore for the VM')
-    parser.add_argument('--host', dest='host', action='store',
+    parser.add_argument('--host', dest='HOST', action='store',
                         help='Destination ESXi host for the VM')
-    parser.add_argument('--resourcepool', dest='resourcepool', action='store',
+    parser.add_argument('--resourcepool', dest='RESOURCEPOOL', action='store',
                         help='Resource pool for the VM')
-    parser.add_argument('--vm_username', dest='vm_username', action='store',
+    parser.add_argument('--vm_username', dest='VM_USERNAME', action='store',
                         default='root', help='VM username, default is \"root\"')
-    parser.add_argument('--vm_password', dest='vm_password', action='store',
+    parser.add_argument('--vm_password', dest='VM_PASSWORD', action='store',
                         default='password', help='VM password, default is \"password\"')
     # cinder and openstack arguments
-    parser.add_argument('--openstack_release', dest='openstack_release', action='store',
+    parser.add_argument('--openstack_release', dest='OPENSTACK_RELEASE', action='store',
                         default='master',
                         help='OpenStack Release. Default is  \"master\"')
-    parser.add_argument('--cinder_repo', dest='cinder_repo', action='store',
+    parser.add_argument('--cinder_repo', dest='CINDER_REPO', action='store',
                         default='http://git.openstack.org/openstack/cinder',
                         help='Cinder GIT repo, default is \"http://git.openstack.org/openstack/cinder\"')
-    parser.add_argument('--cinder_branch', dest='cinder_branch', action='store',
+    parser.add_argument('--cinder_branch', dest='CINDER_BRANCH', action='store',
                         default='master', help='Cinder branch, default is \"master\"')
-    parser.add_argument('--cinder_sio_gateway', dest='cinder_sio_gateway', action='store', required=True,
+    parser.add_argument('--cinder_sio_gateway', dest='CINDER_SIO_GATEWAY', action='store', required=True,
                         help='SIO Gateway address')
-    parser.add_argument('--cinder_sio_pd', dest='cinder_sio_pd', action='store',
+    parser.add_argument('--cinder_sio_pd', dest='CINDER_SIO_PD', action='store',
                         default='default', help='SIO Protection Domain, default is \"default\"')
-    parser.add_argument('--cinder_sio_sp', dest='cinder_sio_sp', action='store',
+    parser.add_argument('--cinder_sio_sp', dest='CINDER_SIO_SP', action='store',
                         default='default', help='SIO Storage Pool, default is \"default\"')
-    parser.add_argument('--cinder_sio_mdm_ips', dest='cinder_sio_mdm_ips', action='store', required=True,
+    parser.add_argument('--cinder_sio_mdm_ips', dest='CINDER_SIO_MDM_IPS', action='store', required=True,
                         help='SIO MDM IP addresses (comma delimted)')
-    parser.add_argument('--tox', dest='tox', action='store_true',
+    parser.add_argument('--tox', dest='TOX', action='store_true',
                         help='If provided, run tox [after starting Devstack, if applicable]')
-    parser.add_argument('--devstack', dest='devstack', action='store_true',
+    parser.add_argument('--devstack', dest='DEVSTACK', action='store_true',
                         help='If provided, start devstack')
 
     # return the parser object
@@ -166,28 +166,28 @@ def template_clone(name, args, si):
         return
 
     # this gets a little convoluted
-    if args.host is not None:
+    if args.HOST is not None:
         # get the resource pool the the specified host, if specified
-        host = get_obj(si.RetrieveContent(), [vim.ComputeResource], args.host)
+        host = get_obj(si.RetrieveContent(), [vim.ComputeResource], args.HOST)
         resource_pool = host.resourcePool
     else:
         # otherwise get the resource pool for the resource pool specified
-        resource_pool = get_obj(si.RetrieveContent(), [vim.ResourcePool], args.resourcepool)
+        resource_pool = get_obj(si.RetrieveContent(), [vim.ResourcePool], args.RESOURCEPOOL)
 
     relocateSpec = vim.vm.RelocateSpec(pool=resource_pool)
 
     # if the host was specified, set it in the relocate spec
-    if args.host is not None:
-        host = get_obj(si.RetrieveContent(), [vim.HostSystem], args.host)
+    if args.HOST is not None:
+        host = get_obj(si.RetrieveContent(), [vim.HostSystem], args.HOST)
         relocateSpec.host = host
     # if the datastore was specified, set it in the relocate spec
-    if args.datastore is not None:
-        datastore = get_obj(si.RetrieveContent(), [vim.Datastore], args.datastore)
+    if args.DATASTORE is not None:
+        datastore = get_obj(si.RetrieveContent(), [vim.Datastore], args.DATASTORE)
         relocateSpec.datastore = datastore
 
     clonespec = vim.vm.CloneSpec(powerOn=False, template=False, customization=None, location=relocateSpec)
-    folder = get_obj(si.RetrieveContent(), [vim.Folder], args.folder)
-    clone = template.Clone(name=args.vm_name, folder=folder, spec=clonespec)
+    folder = get_obj(si.RetrieveContent(), [vim.Folder], args.FOLDER)
+    clone = template.Clone(name=args.VM_NAME, folder=folder, spec=clonespec)
     wait_for_task(clone, si)
 
 def vm_configure(name, args, si):
@@ -207,21 +207,21 @@ def vm_configure(name, args, si):
     if not args.dhcp:
         """Static IP Configuration"""
         adaptermap.adapter.ip = vim.vm.customization.FixedIp()
-        adaptermap.adapter.ip.ipAddress = args.vm_ip
-        adaptermap.adapter.subnetMask = args.subnet
-        adaptermap.adapter.gateway = args.gateway
-        globalip.dnsServerList = args.dns
-        globalip.dnsSuffixList = args.domain
+        adaptermap.adapter.ip.ipAddress = args.VM_IP
+        adaptermap.adapter.subnetMask = args.SUBNET
+        adaptermap.adapter.gateway = args.GATEWAY
+        globalip.dnsServerList = args.DNS
+        globalip.dnsSuffixList = args.DOMAIN
 
     else:
         """DHCP Configuration"""
         adaptermap.adapter.ip = vim.vm.customization.DhcpIpGenerator()
 
-    adaptermap.adapter.dnsDomain = args.domain
+    adaptermap.adapter.dnsDomain = args.DOMAIN
 
     # For Linux . For windows follow sysprep
-    ident = vim.vm.customization.LinuxPrep(domain=args.domain,
-                                           hostName=vim.vm.customization.FixedName(name=args.vm_name))
+    ident = vim.vm.customization.LinuxPrep(domain=args.DOMAIN,
+                                           hostName=vim.vm.customization.FixedName(name=args.VM_NAME))
 
     customspec = vim.vm.customization.Specification()
     # For only one adapter
@@ -253,42 +253,42 @@ def setup_devstack(name, args, si):
         if (getattr(args,k)) is not None:
             print("export "+k+"=\""+str(getattr(args, k))+"\"")
 
-    vm_execute_command(args.vm_name, args.vm_username, args.vm_password, si,
+    vm_execute_command(args.VM_NAME, args.VM_USERNAME, args.VM_PASSWORD, si,
                        'apt-get update; apt-get install git')
     # setup some things needed for devstack and/or tox
     command = ("sudo apt-get install -y python-pip python-gdbm; sudo pip install tox; "
                "sudo apt-get install -y build-essential libpg-dev python3-dev virtualenv;")
-    vm_execute_command(args.vm_name, args.vm_username, args.vm_password, si, command)
+    vm_execute_command(args.VM_NAME, args.VM_USERNAME, args.VM_PASSWORD, si, command)
 
-    vm_execute_command(args.vm_name, args.vm_username, args.vm_password, si,
+    vm_execute_command(args.VM_NAME, args.VM_USERNAME, args.VM_PASSWORD, si,
                        'cd /; mkdir git; chmod -R 777 /git')
-    vm_execute_command(args.vm_name, args.vm_username, args.vm_password, si,
+    vm_execute_command(args.VM_NAME, args.VM_USERNAME, args.VM_PASSWORD, si,
                        'cd /git; git clone https://github.com/tssgery/devstack-tools.git')
-    vm_execute_command(args.vm_name, args.vm_username, args.vm_password, si,
+    vm_execute_command(args.VM_NAME, args.VM_USERNAME, args.VM_PASSWORD, si,
                        '''cd /git/devstack-tools;
-                       export OPENSTACK_RELEASE='''+args.openstack_release+''';
-                       export CINDER_REPO='''+args.cinder_repo+''';
-                       export CINDER_BRANCH='''+args.cinder_branch+''';
-                       export MDM_IPS='''+args.cinder_sio_mdm_ips+''';
-                       export PD='''+args.cinder_sio_pd+''';
-                       export SP='''+args.cinder_sio_sp+''';
-                       export GATEWAY='''+args.cinder_sio_gateway+''';
+                       export OPENSTACK_RELEASE='''+args.OPENSTACK_RELEASE+''';
+                       export CINDER_REPO='''+args.CINDER_REPO+''';
+                       export CINDER_BRANCH='''+args.CINDER_BRANCH+''';
+                       export MDM_IPS='''+args.CINDER_SIO_MDM_IPS+''';
+                       export PD='''+args.CINDER_SIO_PD+''';
+                       export SP='''+args.CINDER_SIO_SP+''';
+                       export GATEWAY='''+args.CINDER_SIO_GATEWAY+''';
                        bin/setup-development-devstack''')
-    vm_execute_command(args.vm_name, 'stack', 'stack', si,
+    vm_execute_command(args.VM_NAME, 'stack', 'stack', si,
                        'cd /git/devstack; cat local.conf')
 
-    if args.devstack:
-        vm_execute_command(args.vm_name, 'stack', 'stack', si,
+    if args.DEVSTACK:
+        vm_execute_command(args.VM_NAME, 'stack', 'stack', si,
                            'cd /git/devstack; ./stack.sh')
 
-    if args.tox:
-        cmd_vars = {'repo': args.cinder_repo,
-                    'branch': args.cinder_branch,
+    if args.TOX:
+        cmd_vars = {'repo': args.CINDER_REPO,
+                    'branch': args.CINDER_BRANCH,
                     'dir': '/git/cinder'}
         command = ("git clone %(repo)s -b %(branch)s %(dir)s; "
                    "cd %(dir)s; "
                    "UPPER_CONSTRAINTS_FILE=http://git.openstack.org/cgit/openstack/requirements/plain/upper-constraints.txt tox") % cmd_vars
-        vm_execute_command(args.vm_name, 'stack', 'stack', si, command)
+        vm_execute_command(args.VM_NAME, 'stack', 'stack', si, command)
 
 
 def main():
@@ -301,30 +301,30 @@ def main():
     si = None
 
     try:
-        print("Trying to connect to vCenter: %s" % args.vcenter)
-        si = connect.Connect(args.vcenter, 443, args.vcenter_username, args.vcenter_password, sslContext=context)
+        print("Trying to connect to vCenter: %s" % args.VCENTER)
+        si = connect.Connect(args.VCENTER, 443, args.VCENTER_USERNAME, args.VCENTER_PASSWORD, sslContext=context)
     except IOError as e:
         pass
         atexit.register(Disconnect, si)
 
-    print("Connected to %s" % args.vcenter)
+    print("Connected to %s" % args.VCENTER)
 
     # delete existing vm
-    vm_delete(args.vm_name, si)
+    vm_delete(args.VM_NAME, si)
 
     # try to clone
-    template_clone(args.template, args, si)
+    template_clone(args.TEMPLATE, args, si)
 
     # configure the vm
-    vm_configure(args.vm_name, args, si)
+    vm_configure(args.VM_NAME, args, si)
 
     # power it on
-    vm_poweron(args.vm_name, si)
+    vm_poweron(args.VM_NAME, si)
 
     print("Sleeping for 5 minutes to allow VM to power on and configure itself")
     time.sleep(300)
 
-    setup_devstack(args.vm_name, args, si)
+    setup_devstack(args.VM_NAME, args, si)
 
 
 # Start program
