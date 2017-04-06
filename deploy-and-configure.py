@@ -299,9 +299,7 @@ def setup_devstack(name, args, si):
                    "UPPER_CONSTRAINTS_FILE=http://git.openstack.org/cgit/openstack/requirements/plain/upper-constraints.txt tox") % cmd_vars
         """
         command=("source /git/devstack.environment && "
-                 "cd /git && git clone \$CINDER_REPO -b \$CINDER_BRANCH && "
-                 "cd cinder && "
-                 "UPPER_CONSTRAINTS_FILE=http://git.openstack.org/cgit/openstack/requirements/plain/upper-constraints.txt tox")
+                 "/git/devstack-tools/bin/run-tox")
         vm_execute_command(args.VM_NAME, 'stack', 'stack', si, command)
 
 
