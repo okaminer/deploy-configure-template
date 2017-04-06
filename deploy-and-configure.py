@@ -278,10 +278,10 @@ def setup_devstack(name, args, si):
     vm_execute_command(args.VM_NAME, args.VM_USERNAME, args.VM_PASSWORD, si,
                        'cd /git; git clone https://github.com/tssgery/devstack-tools.git')
     vm_execute_command(args.VM_NAME, args.VM_USERNAME, args.VM_PASSWORD, si,
-                       'echo \''+_all_env+'\' | sort > ~/devstack.environment')
+                       'echo \''+_all_env+'\' | sort > /git/devstack.environment')
     vm_execute_command(args.VM_NAME, args.VM_USERNAME, args.VM_PASSWORD, si,
                        '''cd /git/devstack-tools;
-                       source /root/devstack.environment;
+                       source /git/devstack.environment;
                        bin/setup-devstack''')
     vm_execute_command(args.VM_NAME, 'stack', 'stack', si,
                        'cd /git/devstack; cat local.conf')
@@ -291,12 +291,17 @@ def setup_devstack(name, args, si):
                            'cd /git/devstack; ./stack.sh')
 
     if args.TOX:
-        cmd_vars = {'repo': args.CINDER_REPO,
+        """cmd_vars = {'repo': args.CINDER_REPO,
                     'branch': args.CINDER_BRANCH,
                     'dir': '/git/cinder'}
         command = ("git clone %(repo)s -b %(branch)s %(dir)s; "
                    "cd %(dir)s; "
                    "UPPER_CONSTRAINTS_FILE=http://git.openstack.org/cgit/openstack/requirements/plain/upper-constraints.txt tox") % cmd_vars
+        """
+        command=("source /git/devstack.environment && "
+                 "cd /git && git clone \$CINDER_REPO -b \$CINDER_BRANCH && "
+                 "cd cinder && "
+                 "UPPER_CONSTRAINTS_FILE=http://git.openstack.org/cgit/openstack/requirements/plain/upper-constraints.txt tox")
         vm_execute_command(args.VM_NAME, 'stack', 'stack', si, command)
 
 
