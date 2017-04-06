@@ -270,7 +270,7 @@ def setup_devstack(name, args, si):
     vm_execute_command(args.VM_NAME, args.VM_USERNAME, args.VM_PASSWORD, si,
                        'cd /git; git clone https://github.com/tssgery/devstack-tools.git')
     vm_execute_command(args.VM_NAME, args.VM_USERNAME, args.VM_PASSWORD, si,
-                       'echo \''+_all_env+'\' > ~/devstack.environment')
+                       'echo \''+_all_env+'\' | sort > ~/devstack.environment')
     vm_execute_command(args.VM_NAME, args.VM_USERNAME, args.VM_PASSWORD, si,
                        '''cd /git/devstack-tools;
                        source /root/devstack.environment;
