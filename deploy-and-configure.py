@@ -258,8 +258,6 @@ def setup_devstack(name, args, si):
             # print("export "+k+"=\""+str(getattr(args, k))+"\";")
             _all_env = _all_env + "export "+k+"=\""+str(getattr(args, k))+"\";\n"
 
-    print (_all_env)
-
     vm_execute_command(args.VM_NAME, args.VM_USERNAME, args.VM_PASSWORD, si,
                        'apt-get update; apt-get install git')
     # setup some things needed for devstack and/or tox
@@ -275,7 +273,7 @@ def setup_devstack(name, args, si):
                        'echo \''+_all_env+'\' > ~/devstack.environment')
     vm_execute_command(args.VM_NAME, args.VM_USERNAME, args.VM_PASSWORD, si,
                        '''cd /git/devstack-tools;
-                       source /root/devstack.environment; 
+                       source /root/devstack.environment;
                        bin/setup-development-devstack''')
     vm_execute_command(args.VM_NAME, 'stack', 'stack', si,
                        'cd /git/devstack; cat local.conf')
