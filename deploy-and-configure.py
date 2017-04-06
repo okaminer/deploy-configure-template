@@ -274,7 +274,7 @@ def setup_devstack(name, args, si):
     vm_execute_command(args.VM_NAME, args.VM_USERNAME, args.VM_PASSWORD, si,
                        '''cd /git/devstack-tools;
                        source /root/devstack.environment;
-                       bin/setup-development-devstack''')
+                       bin/setup-devstack''')
     vm_execute_command(args.VM_NAME, 'stack', 'stack', si,
                        'cd /git/devstack; cat local.conf')
 
