@@ -61,13 +61,13 @@ def setup_arguments():
                         default='http://git.openstack.org/openstack/cinder',
                         help='Cinder GIT repo, default is \"http://git.openstack.org/openstack/cinder\"')
     parser.add_argument('--cinder_branch', dest='CINDER_BRANCH', action='store',
-                        default='master', help='Cinder branch, default is \"master\"')
+                        help='Cinder branch, default is whatever branch is used for \"openstack_release\"')
     parser.add_argument('--tox', dest='TOX', action='store_true',
                         help='If provided, run tox [after starting Devstack, if applicable]')
     parser.add_argument('--devstack', dest='DEVSTACK', action='store_true',
                         help='If provided, start devstack')
     parser.add_argument('--nova_branch', dest='NOVA_BRANCH', action='store',
-                        help='Nova branch, default is whatever ranch is used for \"openstack_release\"')
+                        help='Nova branch, default is whatever branch is used for \"openstack_release\"')
 
     # scaleio settings, used by cinder
     parser.add_argument('--cinder_sio_gateway', dest='CINDER_SIO_GATEWAY', action='store', required=True,
