@@ -251,7 +251,7 @@ def vm_execute_command(name, username, password, si, command):
 def setup_devstack(name, args, si):
     for k in vars(args):
         if (getattr(args,k)) is not None:
-            print("export "+k+"="+getattr(args, k))
+            print("export "+k+"="+getattr(args, str(k)))
 
     vm_execute_command(args.vm_name, args.vm_username, args.vm_password, si,
                        'apt-get update; apt-get install git')
