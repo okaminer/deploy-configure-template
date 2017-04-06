@@ -256,7 +256,7 @@ def setup_devstack(name, args, si):
     for k in vars(args):
         if (getattr(args,k)) is not None:
             # print("export "+k+"=\""+str(getattr(args, k))+"\";")
-            _all_env = _all_env + "export "+k+"=\""+str(getattr(args, k))+"\";"
+            _all_env = _all_env + "export "+k+"=\""+str(getattr(args, k))+"\";\n"
 
     print (_all_env)
 
@@ -271,6 +271,8 @@ def setup_devstack(name, args, si):
                        'cd /; mkdir git; chmod -R 777 /git')
     vm_execute_command(args.VM_NAME, args.VM_USERNAME, args.VM_PASSWORD, si,
                        'cd /git; git clone https://github.com/tssgery/devstack-tools.git')
+    vm_execute_command(args.VM_NAME, args.VM_USERNAME, args.VM_PASSWORD, si,
+                       'cat '+_all_env' > ~/devstack.environment')                       
     vm_execute_command(args.VM_NAME, args.VM_USERNAME, args.VM_PASSWORD, si,
                        '''cd /git/devstack-tools;
                        export OPENSTACK_RELEASE='''+args.OPENSTACK_RELEASE+''';
