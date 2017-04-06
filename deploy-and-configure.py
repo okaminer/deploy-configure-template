@@ -51,6 +51,9 @@ def setup_arguments():
     parser.add_argument('--vm_password', dest='vm_password', action='store',
                         default='password', help='VM password, default is \"password\"')
     # cinder and openstack arguments
+    parser.add_argument('--openstack_release', dest='openstack_release', action='store',
+                        default='master',
+                        help='OpenStack Release. Default is  \"master\"')
     parser.add_argument('--cinder_repo', dest='cinder_repo', action='store',
                         default='http://git.openstack.org/openstack/cinder',
                         help='Cinder GIT repo, default is \"http://git.openstack.org/openstack/cinder\"')
@@ -259,6 +262,7 @@ def setup_devstack(name, args, si):
                        'cd /git; git clone https://github.com/tssgery/devstack-tools.git')
     vm_execute_command(args.vm_name, args.vm_username, args.vm_password, si,
                        '''cd /git/devstack-tools;
+                       export OPENSTACK_RELEASE='''+args.openstack_release+''';
                        export CINDER_REPO='''+args.cinder_repo+''';
                        export CINDER_BRANCH='''+args.cinder_branch+''';
                        export MDM_IPS='''+args.cinder_sio_mdm_ips+''';
