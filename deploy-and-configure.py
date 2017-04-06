@@ -14,6 +14,7 @@ from pyVim.connect import Disconnect, SmartConnect
 
 def setup_arguments():
     parser = argparse.ArgumentParser(description='Clone and configure a VM')
+
     # vcenter configuration
     parser.add_argument('--vcenter', dest='VCENTER', action='store', required=True,
                         default='vcenter.aceshome.name', help='vCenter hostname/ip address')
@@ -21,6 +22,7 @@ def setup_arguments():
                         help='vCenter password')
     parser.add_argument('--vcenter_username', dest='VCENTER_USERNAME', action='store', required=True,
                         help='vCenter username')
+
     # vm settings
     parser.add_argument('--vm_name', dest='VM_NAME', action='store', required=True,
                         help='VM to create/configure')
@@ -50,6 +52,7 @@ def setup_arguments():
                         default='root', help='VM username, default is \"root\"')
     parser.add_argument('--vm_password', dest='VM_PASSWORD', action='store',
                         default='password', help='VM password, default is \"password\"')
+
     # cinder and openstack arguments
     parser.add_argument('--openstack_release', dest='OPENSTACK_RELEASE', action='store',
                         default='master',
@@ -59,6 +62,12 @@ def setup_arguments():
                         help='Cinder GIT repo, default is \"http://git.openstack.org/openstack/cinder\"')
     parser.add_argument('--cinder_branch', dest='CINDER_BRANCH', action='store',
                         default='master', help='Cinder branch, default is \"master\"')
+    parser.add_argument('--tox', dest='TOX', action='store_true',
+                        help='If provided, run tox [after starting Devstack, if applicable]')
+    parser.add_argument('--devstack', dest='DEVSTACK', action='store_true',
+                        help='If provided, start devstack')
+
+    # scaleio settings, used by cinder
     parser.add_argument('--cinder_sio_gateway', dest='CINDER_SIO_GATEWAY', action='store', required=True,
                         help='SIO Gateway address')
     parser.add_argument('--cinder_sio_pd', dest='CINDER_SIO_PD', action='store',
@@ -67,10 +76,7 @@ def setup_arguments():
                         default='default', help='SIO Storage Pool, default is \"default\"')
     parser.add_argument('--cinder_sio_mdm_ips', dest='CINDER_SIO_MDM_IPS', action='store', required=True,
                         help='SIO MDM IP addresses (comma delimted)')
-    parser.add_argument('--tox', dest='TOX', action='store_true',
-                        help='If provided, run tox [after starting Devstack, if applicable]')
-    parser.add_argument('--devstack', dest='DEVSTACK', action='store_true',
-                        help='If provided, start devstack')
+
 
     # return the parser object
     return parser
