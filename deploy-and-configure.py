@@ -249,9 +249,16 @@ def vm_execute_command(name, username, password, si, command):
 
 
 def setup_devstack(name, args, si):
+    # this is kind of ugly, but lets take all the provided arguments
+    # and build them into environment variables that can be interpreted
+    # remotely
+    _all_env = ""
     for k in vars(args):
         if (getattr(args,k)) is not None:
-            print("export "+k+"=\""+str(getattr(args, k))+"\"")
+            # print("export "+k+"=\""+str(getattr(args, k))+"\";")
+            _all_env = _all_env + "export "+k+"=\""+str(getattr(args, k))+"\";"
+
+    print (_all_env)
 
     vm_execute_command(args.VM_NAME, args.VM_USERNAME, args.VM_PASSWORD, si,
                        'apt-get update; apt-get install git')
