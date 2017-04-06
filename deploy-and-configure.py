@@ -272,16 +272,10 @@ def setup_devstack(name, args, si):
     vm_execute_command(args.VM_NAME, args.VM_USERNAME, args.VM_PASSWORD, si,
                        'cd /git; git clone https://github.com/tssgery/devstack-tools.git')
     vm_execute_command(args.VM_NAME, args.VM_USERNAME, args.VM_PASSWORD, si,
-                       'echo \''+_all_env+'\' > ~/devstack.environment')                       
+                       'echo \''+_all_env+'\' > ~/devstack.environment')
     vm_execute_command(args.VM_NAME, args.VM_USERNAME, args.VM_PASSWORD, si,
                        '''cd /git/devstack-tools;
-                       export OPENSTACK_RELEASE='''+args.OPENSTACK_RELEASE+''';
-                       export CINDER_REPO='''+args.CINDER_REPO+''';
-                       export CINDER_BRANCH='''+args.CINDER_BRANCH+''';
-                       export MDM_IPS='''+args.CINDER_SIO_MDM_IPS+''';
-                       export PD='''+args.CINDER_SIO_PD+''';
-                       export SP='''+args.CINDER_SIO_SP+''';
-                       export GATEWAY='''+args.CINDER_SIO_GATEWAY+''';
+                       source /root/devstack.environment; 
                        bin/setup-development-devstack''')
     vm_execute_command(args.VM_NAME, 'stack', 'stack', si,
                        'cd /git/devstack; cat local.conf')
