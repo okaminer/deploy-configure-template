@@ -250,13 +250,17 @@ def vm_execute_command(name, username, password, si, command):
     if vm is None:
         return
 
+    _execute_command(vm.guest.ipAddress,username, password, command)
+    return
+
+def _execute_command(ipaddr, username, password, command):
     print("Executing Command against %s: %s" % (vm.guest.ipAddress, command))
-    connection = ssh(vm.guest.ipAddress, username, password)
+    connection = ssh(ipaddr, username, password)
     output = connection.sendCommand(command, showoutput=True)
     return
 
 
-def setup_devstack(name, args, si):
+def setup_devstack(ipaddr, args, si):
     # this is kind of ugly, but lets take all the provided arguments
     # and build them into environment variables that can be interpreted
     # remotely
@@ -266,7 +270,7 @@ def setup_devstack(name, args, si):
             # print("export "+k+"=\""+str(getattr(args, k))+"\";")
             _all_env = _all_env + "export "+k+"=\""+str(getattr(args, k))+"\"\n"
 
-    vm_execute_command(args.VM_NAME, args.VM_USERNAME, args.VM_PASSWORD, si,
+    vm_execute_command(ipaddr, args.VM_USERNAME, args.VM_PASSWORD, si,
                        'apt-get update; apt-get install git')
     # setup some things needed for devstack and/or tox
     command = ("sudo apt-get install -y python-pip python-gdbm; sudo pip install tox; "
@@ -291,7 +295,7 @@ def setup_devstack(name, args, si):
                            'cd /git/devstack; ./stack.sh')
 
     if args.TOX:
-        vm_execute_command(args.VM_NAME, 'stack', 'stack', si, 
+        vm_execute_command(ipaddr, 'stack', 'stack', si, 
                  'source /git/devstack.environment && /git/devstack-tools/bin/run-tox')
 
 
@@ -328,7 +332,7 @@ def main():
     print("Sleeping for 5 minutes to allow VM to power on and configure itself")
     time.sleep(300)
 
-    setup_devstack(args.VM_NAME, args, si)
+    setup_devstack(args.VM_IP, args, si)
 
 
 # Start program
