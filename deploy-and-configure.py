@@ -244,16 +244,7 @@ def vm_configure(name, args, si):
     wait_for_task(task, si)
 
 
-def vm_execute_command(name, username, password, si, command):
-    vm = get_obj(si.RetrieveContent(), [vim.VirtualMachine], name)
-
-    if vm is None:
-        return
-
-    _execute_command(vm.guest.ipAddress,username, password, command)
-    return
-
-def _execute_command(ipaddr, username, password, command):
+def vm_execute_command(ipaddr, username, password, command):
     print("Executing Command against %s: %s" % (ipaddr, command))
     connection = ssh(ipaddr, username, password)
     output = connection.sendCommand(command, showoutput=True)
@@ -270,32 +261,32 @@ def setup_devstack(ipaddr, args, si):
             # print("export "+k+"=\""+str(getattr(args, k))+"\";")
             _all_env = _all_env + "export "+k+"=\""+str(getattr(args, k))+"\"\n"
 
-    _execute_command(ipaddr, args.VM_USERNAME, args.VM_PASSWORD, 
+    vm_execute_command(ipaddr, args.VM_USERNAME, args.VM_PASSWORD, 
                        'apt-get update; apt-get install git')
     # setup some things needed for devstack and/or tox
     command = ("sudo apt-get install -y python-pip python-gdbm; sudo pip install tox; "
                "sudo apt-get install -y build-essential libpg-dev python3-dev virtualenv;")
-    vm_execute_command(args.VM_NAME, args.VM_USERNAME, args.VM_PASSWORD, si, command)
+    vm_execute_command(ipaddr, args.VM_USERNAME, args.VM_PASSWORD, command)
 
-    vm_execute_command(args.VM_NAME, args.VM_USERNAME, args.VM_PASSWORD, si,
+    vm_execute_command(ipaddr, args.VM_USERNAME, args.VM_PASSWORD, 
                        'cd /; mkdir git; chmod -R 777 /git')
-    vm_execute_command(args.VM_NAME, args.VM_USERNAME, args.VM_PASSWORD, si,
+    vm_execute_command(ipaddr, args.VM_USERNAME, args.VM_PASSWORD,
                        'cd /git; git clone https://github.com/tssgery/devstack-tools.git')
-    vm_execute_command(args.VM_NAME, args.VM_USERNAME, args.VM_PASSWORD, si,
+    vm_execute_command(ipaddr, args.VM_USERNAME, args.VM_PASSWORD,
                        'echo \''+_all_env+'\' | sort > /git/devstack.environment')
-    vm_execute_command(args.VM_NAME, args.VM_USERNAME, args.VM_PASSWORD, si,
+    vm_execute_command(ipaddr, args.VM_USERNAME, args.VM_PASSWORD,
                        '''cd /git/devstack-tools;
                        source /git/devstack.environment;
                        bin/setup-devstack''')
-    vm_execute_command(args.VM_NAME, 'stack', 'stack', si,
+    vm_execute_command(ipaddr, 'stack', 'stack',
                        'cd /git/devstack; cat local.conf')
 
     if args.DEVSTACK:
-        vm_execute_command(args.VM_NAME, 'stack', 'stack', si,
+        vm_execute_command(ipaddr, 'stack', 'stack',
                            'cd /git/devstack; ./stack.sh')
 
     if args.TOX:
-        _execute_command(ipaddr, 'stack', 'stack',  
+        vm_execute_command(ipaddr, 'stack', 'stack',  
                  'source /git/devstack.environment && /git/devstack-tools/bin/run-tox')
 
 
