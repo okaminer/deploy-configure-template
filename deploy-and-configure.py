@@ -71,6 +71,8 @@ def setup_arguments():
                         help='Nova GIT repo, default is \"http://git.openstack.org/openstack/nova\"')
     parser.add_argument('--nova_branch', dest='NOVA_BRANCH', action='store',
                         help='Nova branch, default is whatever branch is used for \"openstack_release\"')
+    parser.add_argument('--ephemeral', dest='EPHEMERAL', action='store_true',
+                        help='If provided, sets up Nova to use ephemeral disks on ScaleIO')
 
     # scaleio settings, used by cinder
     parser.add_argument('--cinder_sio_gateway', dest='CINDER_SIO_GATEWAY', action='store', required=True,
@@ -283,6 +285,10 @@ def setup_devstack(ipaddr, args, si):
                        bin/setup-devstack''')
     vm_execute_command(ipaddr, 'stack', 'stack',
                        'cd /git/devstack; cat local.conf')
+
+    if args.EPHEMERAL:
+        vm_execute_command(ipaddr, args.VM_USERNAME, args.VM_PASSWORD,
+                           'pip install siolib')
 
     if args.DEVSTACK:
         vm_execute_command(ipaddr, 'stack', 'stack',
