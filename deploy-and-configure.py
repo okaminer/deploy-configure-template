@@ -289,6 +289,8 @@ def setup_devstack(ipaddr, args, si):
     if args.EPHEMERAL:
         vm_execute_command(ipaddr, args.VM_USERNAME, args.VM_PASSWORD,
                            'pip install siolib')
+        vm_execute_command(ipaddr, args.VM_USERNAME, args.VM_PASSWORD,
+                           'sed -i -e "s|## images_type=sio|images_type=sio|g" /git/devstack/local.conf')
 
     if args.DEVSTACK:
         vm_execute_command(ipaddr, 'stack', 'stack',
