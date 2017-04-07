@@ -287,8 +287,14 @@ def setup_devstack(ipaddr, args, si):
                        'cd /git/devstack; cat local.conf')
 
     if args.EPHEMERAL:
+        # note, installing with pip does not work yet
+        # we need to clone https://github.com/codedellemc/python-scaleioclient
+        # checkout the newton branch, and run python setup.py install
         vm_execute_command(ipaddr, args.VM_USERNAME, args.VM_PASSWORD,
-                           'pip install siolib')
+                           '''cd /git;
+                           git clone https://github.com/codedellemc/python-scaleioclient -b newton
+                           cd python-scaleioclient
+                           python setup.py install''')
         vm_execute_command(ipaddr, args.VM_USERNAME, args.VM_PASSWORD,
                            'sed -i -e "s|## images_type=sio|images_type=sio|g" /git/devstack/local.conf')
 
