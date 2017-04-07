@@ -254,7 +254,7 @@ def vm_execute_command(name, username, password, si, command):
     return
 
 def _execute_command(ipaddr, username, password, command):
-    print("Executing Command against %s: %s" % (vm.guest.ipAddress, command))
+    print("Executing Command against %s: %s" % (ipaddr, command))
     connection = ssh(ipaddr, username, password)
     output = connection.sendCommand(command, showoutput=True)
     return
