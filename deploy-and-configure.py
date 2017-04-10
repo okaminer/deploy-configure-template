@@ -283,8 +283,6 @@ def setup_devstack(ipaddr, args, si):
                        '''cd /git/devstack-tools;
                        source /git/devstack.environment;
                        bin/setup-devstack''')
-    vm_execute_command(ipaddr, 'stack', 'stack',
-                       'cd /git/devstack; cat local.conf')
 
     if args.EPHEMERAL:
         # note, installing with pip does not work yet
@@ -306,6 +304,8 @@ def setup_devstack(ipaddr, args, si):
         vm_execute_command(ipaddr, 'stack', 'stack',
                  'source /git/devstack.environment && /git/devstack-tools/bin/run-tox')
 
+    vm_execute_command(ipaddr, 'stack', 'stack',
+                       'cd /git/devstack; cat local.conf')
 
 def main():
     context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
