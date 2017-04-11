@@ -251,7 +251,7 @@ def vm_execute_command(ipaddr, username, password, command):
     return
 
 
-def setup_devstack(ipaddr, username, password, si):
+def setup_devstack(ipaddr, username, password, args, si):
     # this is kind of ugly, but lets take all the provided arguments
     # and build them into environment variables that can be interpreted
     # remotely
@@ -349,7 +349,10 @@ def main():
 
     all_ip_addresses = args.VM_IP.split(",")
     for ipaddress in all_ip_addresses:
-        setup_devstack(ipaddress, args.VM_USERNAME, args.VM_PASSWORD, si)
+        # setup devstack on these VMs
+        # note that the fist ipaddress will get the services
+        # subsequent ipaddresses will be compute only
+        setup_devstack(ipaddress, args.VM_USERNAME, args.VM_PASSWORD, args, si)
 
 
 
