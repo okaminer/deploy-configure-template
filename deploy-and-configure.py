@@ -320,34 +320,38 @@ def main():
 
     print("Connected to %s" % args.VCENTER)
 
-    # work on the services VM
-    vm_name=args.VM_PREFIX + "-" + args.VM_IP
-    vm_name=vm_name.replace(".", "-")
+    all_ip_addresses = args.VM_IP.split(",")
+    for ipaddress in all_ip_addresses:
+        # work on the services VM
+        vm_name=args.VM_PREFIX + "-" + ipaddress
+        vm_name=vm_name.replace(".", "-")
 
-    # delete existing vm
-    vm_delete(vm_name, si)
+        # delete existing vm
+        vm_delete(vm_name, si)
 
-    # try to clone
-    template_clone(args.TEMPLATE, vm_name, args, si)
+        # try to clone
+        template_clone(args.TEMPLATE, vm_name, args, si)
 
-    # configure the vm
-    vm_configure(vm_name,
-                 args.VM_IP,
-                 args.SUBNET,
-                 args.GATEWAY,
-                 args.DNS,
-                 args.DOMAIN,
-                 si)
+        # configure the vm
+        vm_configure(vm_name,
+                    ipaddress,
+                    args.SUBNET,
+                    args.GATEWAY,
+                    args.DNS,
+                    args.DOMAIN,
+                    si)
 
-    # power it on
-    vm_poweron(vm_name, si)
+        # power it on
+        vm_poweron(vm_name, si)
 
-    print("Sleeping for 5 minutes to allow VM to power on and configure itself")
+    print("Sleeping for 5 minutes to allow VMs to power on and configure")
     time.sleep(300)
 
-    setup_devstack(args.VM_IP, args.VM_USERNAME, args.VM_PASSWORD, si)
+    all_ip_addresses = args.VM_IP.split(",")
+    for ipaddress in all_ip_addresses:
+        setup_devstack(ipaddress, args.VM_USERNAME, args.VM_PASSWORD, si)
 
-    # if any compute nodes were specified, set them up as well
+
 
 # Start program
 if __name__ == "__main__":
