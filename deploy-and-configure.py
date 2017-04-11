@@ -252,6 +252,9 @@ def vm_execute_command(ipaddr, username, password, command):
 
 
 def setup_devstack(ipaddr, username, password, args, services_ip):
+    # wait for the ipaddr to become available...
+    vm_execute_command(ipaddr, username, password, 'uptime')
+
     # this is kind of ugly, but lets take all the provided arguments
     # and build them into environment variables that can be interpreted
     # remotely
@@ -349,9 +352,10 @@ def main():
         # power it on
         vm_poweron(vm_name, si)
 
-    print("Sleeping for 5 minutes to allow VMs to power on and configure")
-    time.sleep(300)
-
+    # no need to sleep anymore, setup_devstack willw ait for the ipaddr
+    #print("Sleeping for 5 minutes to allow VMs to power on and configure")
+    #time.sleep(300)
+    
     all_ip_addresses = args.VM_IP.split(",")
     for i, ipaddress in enumerate(all_ip_addresses):
         # setup devstack on these VMs

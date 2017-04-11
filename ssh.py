@@ -6,8 +6,8 @@ import sys
 
 class ssh:
     client = None
- 
- 
+
+
     def __init__(self, address, username, password):
         i = 0
         while True:
@@ -25,11 +25,11 @@ class ssh:
                 sys.exit(1)
             except:
                 print("Could not SSH to %s, waiting for it to start" % address)
-                time.sleep(5)
+                time.sleep(10)
 
             i += 1
             # If we could not connect within time limit
-            if i == 30:
+            if i == 60:
                 print("Could not connect to %s. Giving up" % address)
                 sys.exit(1)
 
@@ -54,4 +54,3 @@ class ssh:
                     return alldata
         else:
             print("Connection not opened.")
-
