@@ -363,7 +363,7 @@ def main():
                        args,
                        all_ip_addresses[0])
 
-    run_postinstall(all_ip_addresses[], args)
+    run_postinstall(all_ip_addresses[0], args)
 
 # Start program
 if __name__ == "__main__":
