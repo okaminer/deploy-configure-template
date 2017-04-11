@@ -26,8 +26,6 @@ def setup_arguments():
     # vm settings
     parser.add_argument('--vm_prefix', dest='VM_PREFIX', action='store', required=True,
                         help='VM to create/configure')
-    parser.add_argument('--dhcp', dest='DHPC', action='store_true',
-                        help='Configures DHCP if supplied')
     parser.add_argument('--vm_ip', dest='VM_IP', action='store',
                         help='IP address to assign to the VM, ignored if DHCP')
     parser.add_argument('--subnet', dest='SUBNET', action='store',
@@ -219,18 +217,13 @@ def vm_configure(vm_name, ip, subnet, gateway, dns, domain, si):
     adaptermap.adapter = vim.vm.customization.IPSettings()
     globalip = vim.vm.customization.GlobalIPSettings()
 
-    if not args.DHPC:
-        """Static IP Configuration"""
-        adaptermap.adapter.ip = vim.vm.customization.FixedIp()
-        adaptermap.adapter.ip.ipAddress = ip
-        adaptermap.adapter.subnetMask = subnet
-        adaptermap.adapter.gateway = gateway
-        globalip.dnsServerList = dns
-        globalip.dnsSuffixList = domain
-
-    else:
-        """DHCP Configuration"""
-        adaptermap.adapter.ip = vim.vm.customization.DhcpIpGenerator()
+    """Static IP Configuration"""
+    adaptermap.adapter.ip = vim.vm.customization.FixedIp()
+    adaptermap.adapter.ip.ipAddress = ip
+    adaptermap.adapter.subnetMask = subnet
+    adaptermap.adapter.gateway = gateway
+    globalip.dnsServerList = dns
+    globalip.dnsSuffixList = domain
 
     adaptermap.adapter.dnsDomain = domain
 
