@@ -251,7 +251,7 @@ def vm_execute_command(ipaddr, username, password, command):
     return
 
 
-def setup_devstack(ipaddr, username, password, args, services_ip, si):
+def setup_devstack(ipaddr, username, password, args, services_ip):
     # this is kind of ugly, but lets take all the provided arguments
     # and build them into environment variables that can be interpreted
     # remotely
@@ -274,10 +274,15 @@ def setup_devstack(ipaddr, username, password, args, services_ip, si):
                        'cd /git; git clone https://github.com/tssgery/devstack-tools.git')
     vm_execute_command(ipaddr, username, password,
                        'echo \''+_all_env+'\' | sort > /git/devstack.environment')
-    vm_execute_command(ipaddr, username, password,
-                       '''cd /git/devstack-tools;
-                       source /git/devstack.environment;
-                       bin/setup-devstack''')
+    # for setting up devstack, only the first node gets services
+    # subsequent nodes get compute only
+    # we check this with the 'services_ip' argument:
+    #      If ipaddr==services_ip, then we are settng up the services
+    command = ("cd /git/devstack-tools; source /git/devstack.environment; "
+               "bin/setup_devstack ")
+    if ( ipaddr != services_ip ):
+        command = command + services_ip
+    vm_execute_command(ipaddr, username, password, command)
 
     if args.EPHEMERAL:
         # note, installing with pip does not work yet
@@ -291,6 +296,8 @@ def setup_devstack(ipaddr, username, password, args, services_ip, si):
         vm_execute_command(ipaddr, username, password,
                            'sed -i -e "s|## images_type=sio|images_type=sio|g" /git/devstack/local.conf')
 
+
+def run_postinstall(ipaddr, args):
     if args.DEVSTACK:
         vm_execute_command(ipaddr, 'stack', 'stack',
                            'cd /git/devstack; ./stack.sh')
@@ -298,6 +305,7 @@ def setup_devstack(ipaddr, username, password, args, services_ip, si):
     if args.TOX:
         vm_execute_command(ipaddr, 'stack', 'stack',
                  'source /git/devstack.environment && /git/devstack-tools/bin/run-tox')
+
 
 def main():
     context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
@@ -353,10 +361,9 @@ def main():
                        args.VM_USERNAME,
                        args.VM_PASSWORD,
                        args,
-                       all_ip_addresses[0],
-                       si)
+                       all_ip_addresses[0])
 
-
+    run_postinstall(all_ip_addresses[], args)
 
 # Start program
 if __name__ == "__main__":
