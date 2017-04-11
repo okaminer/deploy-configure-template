@@ -282,7 +282,7 @@ def setup_devstack(ipaddr, username, password, args, services_ip):
     # we check this with the 'services_ip' argument:
     #      If ipaddr==services_ip, then we are settng up the services
     command = ("cd /git/devstack-tools; source /git/devstack.environment; "
-               "bin/setup-devstack ")
+               "bin/setup-devstack " + ipaddre + " ")
     if ( ipaddr != services_ip ):
         command = command + services_ip
     vm_execute_command(ipaddr, username, password, command)
@@ -355,7 +355,7 @@ def main():
     # no need to sleep anymore, setup_devstack willw ait for the ipaddr
     #print("Sleeping for 5 minutes to allow VMs to power on and configure")
     #time.sleep(300)
-    
+
     all_ip_addresses = args.VM_IP.split(",")
     for i, ipaddress in enumerate(all_ip_addresses):
         # setup devstack on these VMs
