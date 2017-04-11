@@ -24,7 +24,7 @@ def setup_arguments():
                         help='vCenter username')
 
     # vm settings
-    parser.add_argument('--vm_name', dest='VM_NAME', action='store', required=True,
+    parser.add_argument('--vm_prefix', dest='VM_PREFIX', action='store', required=True,
                         help='VM to create/configure')
     parser.add_argument('--dhcp', dest='DHPC', action='store_true',
                         help='Configures DHCP if supplied')
@@ -52,6 +52,8 @@ def setup_arguments():
                         default='root', help='VM username, default is \"root\"')
     parser.add_argument('--vm_password', dest='VM_PASSWORD', action='store',
                         default='password', help='VM password, default is \"password\"')
+    parser.add_argument('--vm_compute_ips', dest='VM_COMPUTE', action='store',
+                        help='IP address of nodes to setup as compute only (comma seperated)')
 
     # cinder and openstack arguments
     parser.add_argument('--openstack_release', dest='OPENSTACK_RELEASE', action='store',
@@ -171,7 +173,7 @@ def vm_poweron(name, si):
         wait_for_task(task, si)
 
 
-def template_clone(name, args, si):
+def template_clone(name, vm_name, args, si):
     print("Cloning template: %s" % name)
     template = get_obj(si.RetrieveContent(), [vim.VirtualMachine], name)
     if template is None:
@@ -203,7 +205,7 @@ def template_clone(name, args, si):
     clone = template.Clone(name=args.VM_NAME, folder=folder, spec=clonespec)
     wait_for_task(clone, si)
 
-def vm_configure(name, args, si):
+def vm_configure(vm_name, ip, subnet, gateway, dns, domain, args, si):
     vm = get_obj(si.RetrieveContent(), [vim.VirtualMachine], name)
     if vm is None:
         return
@@ -220,21 +222,21 @@ def vm_configure(name, args, si):
     if not args.DHPC:
         """Static IP Configuration"""
         adaptermap.adapter.ip = vim.vm.customization.FixedIp()
-        adaptermap.adapter.ip.ipAddress = args.VM_IP
-        adaptermap.adapter.subnetMask = args.SUBNET
-        adaptermap.adapter.gateway = args.GATEWAY
-        globalip.dnsServerList = args.DNS
-        globalip.dnsSuffixList = args.DOMAIN
+        adaptermap.adapter.ip.ipAddress = ip
+        adaptermap.adapter.subnetMask = subnet
+        adaptermap.adapter.gateway = gateway
+        globalip.dnsServerList = dns
+        globalip.dnsSuffixList = domain
 
     else:
         """DHCP Configuration"""
         adaptermap.adapter.ip = vim.vm.customization.DhcpIpGenerator()
 
-    adaptermap.adapter.dnsDomain = args.DOMAIN
+    adaptermap.adapter.dnsDomain = domain
 
     # For Linux . For windows follow sysprep
-    ident = vim.vm.customization.LinuxPrep(domain=args.DOMAIN,
-                                           hostName=vim.vm.customization.FixedName(name=args.VM_NAME))
+    ident = vim.vm.customization.LinuxPrep(domain=domain,
+                                           hostName=vim.vm.customization.FixedName(name=vm_name))
 
     customspec = vim.vm.customization.Specification()
     # For only one adapter
@@ -242,7 +244,7 @@ def vm_configure(name, args, si):
     customspec.nicSettingMap = [adaptermap]
     customspec.globalIPSettings = globalip
 
-    print("Reconfiguring the VM: %s" % name)
+    print("Reconfiguring the VM: %s" % vm_name)
     task = vm.Customize(spec=customspec)
 
     # Wait for Network Reconfigure to complete
@@ -256,7 +258,7 @@ def vm_execute_command(ipaddr, username, password, command):
     return
 
 
-def setup_devstack(ipaddr, args, si):
+def setup_devstack(ipaddr, username, password, si):
     # this is kind of ugly, but lets take all the provided arguments
     # and build them into environment variables that can be interpreted
     # remotely
@@ -266,20 +268,20 @@ def setup_devstack(ipaddr, args, si):
             # print("export "+k+"=\""+str(getattr(args, k))+"\";")
             _all_env = _all_env + "export "+k+"=\""+str(getattr(args, k))+"\"\n"
 
-    vm_execute_command(ipaddr, args.VM_USERNAME, args.VM_PASSWORD,
+    vm_execute_command(ipaddr, username, pasword,
                        'apt-get update; apt-get install git')
     # setup some things needed for devstack and/or tox
     command = ("sudo apt-get install -y python-pip python-gdbm; sudo pip install tox; "
                "sudo apt-get install -y build-essential libpg-dev python3-dev virtualenv;")
-    vm_execute_command(ipaddr, args.VM_USERNAME, args.VM_PASSWORD, command)
+    vm_execute_command(ipaddr, username, password, command)
 
-    vm_execute_command(ipaddr, args.VM_USERNAME, args.VM_PASSWORD,
+    vm_execute_command(ipaddr, username, password,
                        'cd /; mkdir git; chmod -R 777 /git')
-    vm_execute_command(ipaddr, args.VM_USERNAME, args.VM_PASSWORD,
+    vm_execute_command(ipaddr, username, password,
                        'cd /git; git clone https://github.com/tssgery/devstack-tools.git')
-    vm_execute_command(ipaddr, args.VM_USERNAME, args.VM_PASSWORD,
+    vm_execute_command(ipaddr, username, password,
                        'echo \''+_all_env+'\' | sort > /git/devstack.environment')
-    vm_execute_command(ipaddr, args.VM_USERNAME, args.VM_PASSWORD,
+    vm_execute_command(ipaddr, username, password,
                        '''cd /git/devstack-tools;
                        source /git/devstack.environment;
                        bin/setup-devstack''')
@@ -288,12 +290,12 @@ def setup_devstack(ipaddr, args, si):
         # note, installing with pip does not work yet
         # we need to clone https://github.com/codedellemc/python-scaleioclient
         # checkout the newton branch, and run python setup.py install
-        vm_execute_command(ipaddr, args.VM_USERNAME, args.VM_PASSWORD,
+        vm_execute_command(ipaddr, username, password,
                            '''cd /git;
                            git clone https://github.com/codedellemc/python-scaleioclient -b newton
                            cd python-scaleioclient
                            python setup.py install''')
-        vm_execute_command(ipaddr, args.VM_USERNAME, args.VM_PASSWORD,
+        vm_execute_command(ipaddr, username, password,
                            'sed -i -e "s|## images_type=sio|images_type=sio|g" /git/devstack/local.conf')
 
     if args.DEVSTACK:
@@ -325,23 +327,34 @@ def main():
 
     print("Connected to %s" % args.VCENTER)
 
+    # work on the services VM
+    vm_name=args.VM_PREFIX + "-" + args.VM_IP
+    vm_name=vm_name.replace(".", "-")
+
     # delete existing vm
-    vm_delete(args.VM_NAME, si)
+    vm_delete(vm_name, si)
 
     # try to clone
-    template_clone(args.TEMPLATE, args, si)
+    template_clone(args.TEMPLATE, vm_name, args, si)
 
     # configure the vm
-    vm_configure(args.VM_NAME, args, si)
+    vm_configure(vm_name,
+                 args.VM_IP,
+                 args.SUBNET,
+                 args.GATEWAY,
+                 args.DNS,
+                 args.DOMAIN,
+                 si)
 
     # power it on
-    vm_poweron(args.VM_NAME, si)
+    vm_poweron(vm_name, si)
 
     print("Sleeping for 5 minutes to allow VM to power on and configure itself")
     time.sleep(300)
 
     setup_devstack(args.VM_IP, args, si)
 
+    # if any compute nodes were specified, set them up as well
 
 # Start program
 if __name__ == "__main__":
