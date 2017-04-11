@@ -205,7 +205,7 @@ def template_clone(name, vm_name, args, si):
     clone = template.Clone(name=vm_name, folder=folder, spec=clonespec)
     wait_for_task(clone, si)
 
-def vm_configure(vm_name, ip, subnet, gateway, dns, domain, args, si):
+def vm_configure(vm_name, ip, subnet, gateway, dns, domain, si):
     vm = get_obj(si.RetrieveContent(), [vim.VirtualMachine], name)
     if vm is None:
         return
