@@ -345,7 +345,7 @@ def main():
     print("Sleeping for 5 minutes to allow VM to power on and configure itself")
     time.sleep(300)
 
-    setup_devstack(args.VM_IP, args, si)
+    setup_devstack(args.VM_IP, args.VM_USERNAME, args.VM_PASSWORD, si)
 
     # if any compute nodes were specified, set them up as well
 
