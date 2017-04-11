@@ -251,7 +251,7 @@ def vm_execute_command(ipaddr, username, password, command):
     return
 
 
-def setup_devstack(ipaddr, username, password, args, si):
+def setup_devstack(ipaddr, username, password, args, services_ip, si):
     # this is kind of ugly, but lets take all the provided arguments
     # and build them into environment variables that can be interpreted
     # remotely
@@ -261,7 +261,7 @@ def setup_devstack(ipaddr, username, password, args, si):
             # print("export "+k+"=\""+str(getattr(args, k))+"\";")
             _all_env = _all_env + "export "+k+"=\""+str(getattr(args, k))+"\"\n"
 
-    vm_execute_command(ipaddr, username, pasword,
+    vm_execute_command(ipaddr, username, password,
                        'apt-get update; apt-get install git')
     # setup some things needed for devstack and/or tox
     command = ("sudo apt-get install -y python-pip python-gdbm; sudo pip install tox; "
@@ -298,9 +298,6 @@ def setup_devstack(ipaddr, username, password, args, si):
     if args.TOX:
         vm_execute_command(ipaddr, 'stack', 'stack',
                  'source /git/devstack.environment && /git/devstack-tools/bin/run-tox')
-
-    vm_execute_command(ipaddr, 'stack', 'stack',
-                       'cd /git/devstack; cat local.conf')
 
 def main():
     context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
@@ -348,11 +345,16 @@ def main():
     time.sleep(300)
 
     all_ip_addresses = args.VM_IP.split(",")
-    for ipaddress in all_ip_addresses:
+    for i, ipaddress in enumerate(all_ip_addresses):
         # setup devstack on these VMs
         # note that the fist ipaddress will get the services
         # subsequent ipaddresses will be compute only
-        setup_devstack(ipaddress, args.VM_USERNAME, args.VM_PASSWORD, args, si)
+        setup_devstack(ipaddress,
+                       args.VM_USERNAME,
+                       args.VM_PASSWORD,
+                       args,
+                       all_ip_addresses[0],
+                       si)
 
 
 
