@@ -279,7 +279,7 @@ def setup_devstack(ipaddr, username, password, args, services_ip):
     # we check this with the 'services_ip' argument:
     #      If ipaddr==services_ip, then we are settng up the services
     command = ("cd /git/devstack-tools; source /git/devstack.environment; "
-               "bin/setup_devstack ")
+               "bin/setup-devstack ")
     if ( ipaddr != services_ip ):
         command = command + services_ip
     vm_execute_command(ipaddr, username, password, command)
