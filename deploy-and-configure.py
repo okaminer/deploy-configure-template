@@ -202,7 +202,7 @@ def template_clone(name, vm_name, args, si):
 
     clonespec = vim.vm.CloneSpec(powerOn=False, template=False, customization=None, location=relocateSpec)
     folder = get_obj(si.RetrieveContent(), [vim.Folder], args.FOLDER)
-    clone = template.Clone(name=args.VM_NAME, folder=folder, spec=clonespec)
+    clone = template.Clone(name=vm_name, folder=folder, spec=clonespec)
     wait_for_task(clone, si)
 
 def vm_configure(vm_name, ip, subnet, gateway, dns, domain, args, si):
