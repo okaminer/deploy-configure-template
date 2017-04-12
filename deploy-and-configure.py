@@ -64,6 +64,8 @@ def setup_arguments():
                         help='Cinder branch, default is whatever branch is used for \"openstack_release\"')
     parser.add_argument('--tox', dest='TOX', action='store_true',
                         help='If provided, run tox [after starting Devstack, if applicable]')
+    parser.add_argument('--tempest', dest='TEMPEST', action='store_true',
+                        help='If provided, run tempest [implies starting DevStack]')
     parser.add_argument('--devstack', dest='DEVSTACK', action='store_true',
                         help='If provided, start devstack')
     parser.add_argument('--nova_repo', dest='NOVA_REPO', action='store',
@@ -301,7 +303,7 @@ def setup_devstack(ipaddr, username, password, args, services_ip):
 
 
 def run_postinstall(ipaddr, args):
-    if args.DEVSTACK:
+    if args.DEVSTACK or args.TEMPEST:
         vm_execute_command(ipaddr, 'stack', 'stack',
                            'cd /git/devstack; ./stack.sh')
 
@@ -309,6 +311,9 @@ def run_postinstall(ipaddr, args):
         vm_execute_command(ipaddr, 'stack', 'stack',
                  'source /git/devstack.environment && /git/devstack-tools/bin/run-tox')
 
+    if args.TEMPEST:
+        vm_execute_command(ipaddr, 'stack', 'stack',
+                 'source /git/devstack.environment && /git/devstack-tools/bin/run-tempest')
 
 def main():
     context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
