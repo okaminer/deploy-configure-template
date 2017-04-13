@@ -307,6 +307,7 @@ def run_postinstall(ipaddr, args):
         vm_execute_command(ipaddr, 'stack', 'stack',
                            'cd /git/devstack; ./stack.sh')
 
+def run_postinstall_services_only(ipaddr, args):
     if args.TOX:
         vm_execute_command(ipaddr, 'stack', 'stack',
                  'source /git/devstack.environment && /git/devstack-tools/bin/run-tox')
@@ -372,7 +373,12 @@ def main():
                        args,
                        all_ip_addresses[0])
 
-    run_postinstall(all_ip_addresses[0], args)
+    # run anything that needs to be run on all hosts
+    for i, ipaddress in enumerate(all_ip_addresses):
+        run_postinstall(ipaddress, args)
+
+    # run anything that gets run on first node only
+    run_postinstall_services_only(all_ip_addresses[0], args)
 
 # Start program
 if __name__ == "__main__":
