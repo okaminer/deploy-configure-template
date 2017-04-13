@@ -139,6 +139,7 @@ def wait_for_task(task, actionName='job', hideResult=False):
     sys.stdout.write('\r')
     sys.stdout.write("[%-50s] %d%%" % ('='*50, 100))
     sys.stdout.flush()
+    print("")
 
     return task.info.result
 
