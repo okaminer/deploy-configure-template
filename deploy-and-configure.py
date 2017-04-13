@@ -126,23 +126,19 @@ def wait_for_task(task, actionName='job', hideResult=False):
         progress = task.info.progress
         if progress is not None and progress != old_progress:
             sys.stdout.write('\r')
-            # the exact output you're looking for:
             sys.stdout.write("[%-50s] %d%%" % ('='*(int(progress/2)), int(progress)))
             sys.stdout.flush()
             old_progress = progress
         time.sleep(2)
 
-    if task.info.state == vim.TaskInfo.State.success:
-        sys.stdout.write('\r')
-        # the exact output you're looking for:
-        sys.stdout.write("[%-50s] %d%%" % ('='*50, 100))
-        print("")
-    else:
+    if task.info.state == vim.TaskInfo.State.error:
         print("")
         print(task.info)
         raise Exception(task.info.error)
 
-    print("")
+    sys.stdout.write('\r')
+    sys.stdout.write("[%-50s] %d%%" % ('='*50, 100))
+    sys.stdout.flush()
 
     return task.info.result
 
@@ -358,9 +354,8 @@ def main():
         # power it on
         vm_poweron(vm_name, si)
 
-    # no need to sleep anymore, setup_devstack willw ait for the ipaddr
-    #print("Sleeping for 5 minutes to allow VMs to power on and configure")
-    #time.sleep(300)
+    # just a short sleep here. This allows the VM to get started booting
+    time.sleep(60)
 
     all_ip_addresses = args.VM_IP.split(",")
     for i, ipaddress in enumerate(all_ip_addresses):
