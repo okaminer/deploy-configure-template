@@ -266,7 +266,6 @@ def setup_devstack(ipaddr, username, password, args, services_ip):
     # setup some things needed for devstack and/or tox
     command = ("apt-get update; "
                "apt-get install -y python-pip python-gdbm; "
-               "pip install tox; "
                "apt-get install -y build-essential libpg-dev python3-dev virtualenv;"
                "apt-get install -y git")
     vm_execute_command(ipaddr, username, password, command)
