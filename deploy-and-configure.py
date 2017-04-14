@@ -263,11 +263,12 @@ def setup_devstack(ipaddr, username, password, args, services_ip):
             # print("export "+k+"=\""+str(getattr(args, k))+"\";")
             _all_env = _all_env + "export "+k+"=\""+str(getattr(args, k))+"\"\n"
 
-    vm_execute_command(ipaddr, username, password,
-                       'apt-get update; apt-get install git')
     # setup some things needed for devstack and/or tox
-    command = ("sudo apt-get install -y python-pip python-gdbm; sudo pip install tox; "
-               "sudo apt-get install -y build-essential libpg-dev python3-dev virtualenv;")
+    command = ("apt-get update; "
+               "apt-get install -y python-pip python-gdbm; "
+               "pip install tox; "
+               "apt-get install -y build-essential libpg-dev python3-dev virtualenv;"
+               "apt-get install -y git")
     vm_execute_command(ipaddr, username, password, command)
 
     vm_execute_command(ipaddr, username, password,
