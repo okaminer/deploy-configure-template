@@ -1,5 +1,5 @@
 FROM python:2.7
-MAINTAINER Eric Young <eric@aceshome.com>
+MAINTAINER Eric Young <eric.young@emc.com>
 
 ENV APPDIR /app
 RUN mkdir $APPDIR
@@ -16,4 +16,3 @@ ADD *.py $APPDIR/
 
 # Clean up APT when done.
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
