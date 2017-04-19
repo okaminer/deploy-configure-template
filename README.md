@@ -1,1 +1,1 @@
-# vm-deploy-and-configure
+# deploy-and-configure

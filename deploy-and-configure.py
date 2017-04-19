@@ -275,7 +275,7 @@ def setup_devstack(ipaddr, username, password, args, services_ip):
     vm_execute_command(ipaddr, username, password,
                        'cd /; mkdir git; chmod -R 777 /git')
     vm_execute_command(ipaddr, username, password,
-                       'cd /git; git clone https://github.com/tssgery/devstack-tools.git')
+                       'cd /git; git clone https://github.com/eric-young/devstack-tools.git')
     vm_execute_command(ipaddr, username, password,
                        'echo \''+_all_env+'\' | sort > /git/devstack.environment')
     # for setting up devstack, only the first node gets services
