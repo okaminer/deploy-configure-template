@@ -66,6 +66,8 @@ def setup_arguments():
                         help='If provided, run tox [after starting Devstack, if applicable]')
     parser.add_argument('--tempest_cinder', dest='TEMPEST_CINDER', action='store_true',
                         help='If provided, run Cinder tempest tests [implies starting DevStack]')
+    parser.add_argument('--tempest_nova', dest='TEMPEST_NOVA', action='store_true',
+                        help='If provided, run Nova tempest tests [implies starting DevStack]')
     parser.add_argument('--devstack', dest='DEVSTACK', action='store_true',
                         help='If provided, start devstack')
     parser.add_argument('--nova_repo', dest='NOVA_REPO', action='store',
@@ -300,7 +302,7 @@ def setup_devstack(ipaddr, username, password, args, services_ip):
 
 
 def run_postinstall(ipaddr, args):
-    if args.DEVSTACK or args.TEMPEST_CINDER:
+    if args.DEVSTACK or args.TEMPEST_CINDER or args.TEMPEST_NOVA:
         vm_execute_command(ipaddr, 'stack', 'stack',
                            'cd /git/devstack; ./stack.sh')
 
@@ -312,6 +314,10 @@ def run_postinstall_services_only(ipaddr, args):
     if args.TEMPEST_CINDER:
         vm_execute_command(ipaddr, 'stack', 'stack',
                  'source /git/devstack.environment && /git/devstack-tools/bin/run-tempest-cinder')
+
+    if args.TEMPEST_NOVA:
+        vm_execute_command(ipaddr, 'stack', 'stack',
+                 'source /git/devstack.environment && /git/devstack-tools/bin/run-tempest-nova')
 
 def main():
     context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
