@@ -310,15 +310,17 @@ def run_postinstall(ipaddr, args):
 def run_postinstall_services_only(ipaddr, args):
     if args.TOX:
         vm_execute_command(ipaddr, 'stack', 'stack',
-                 'source /git/devstack.environment && /git/devstack-tools/bin/run-tox')
+                 '/git/devstack-tools/bin/run-tox')
 
     if args.TEMPEST_CINDER:
         vm_execute_command(ipaddr, 'stack', 'stack',
-                 'source /git/devstack.environment && /git/devstack-tools/bin/run-tempest-cinder')
+                 '''source /git/devstack/openrc admin && '''
+                 '''/git/devstack-tools/bin/run-tempest-cinder''')
 
     if args.TEMPEST_NOVA:
         vm_execute_command(ipaddr, 'stack', 'stack',
-                 'source /git/devstack.environment && /git/devstack-tools/bin/run-tempest-nova')
+                 '''source /git/devstack/openrc admin && '''
+                 '''/git/devstack-tools/bin/run-tempest-nova''')
 
 def main():
     context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
