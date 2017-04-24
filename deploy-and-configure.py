@@ -289,16 +289,17 @@ def setup_devstack(ipaddr, username, password, args, services_ip):
     vm_execute_command(ipaddr, username, password, command)
 
     if args.EPHEMERAL:
-        # note, installing with pip does not work yet
+        # note, installing with pip only works on Pike+
         # we need to clone https://github.com/codedellemc/python-scaleioclient
         # checkout the newton branch, and run python setup.py install
-        vm_execute_command(ipaddr, username, password,
-                           '''cd /git;
-                           git clone https://github.com/codedellemc/python-scaleioclient -b newton
-                           cd python-scaleioclient
-                           python setup.py install''')
-        vm_execute_command(ipaddr, username, password,
-                           'sed -i -e "s|## images_type=sio|images_type=sio|g" /git/devstack/local.conf')
+        echo "Moved setup of ephemeral requirements to setup_devstack"
+        #vm_execute_command(ipaddr, username, password,
+        #                   '''cd /git;
+        #                   git clone https://github.com/codedellemc/python-scaleioclient -b newton
+        #                   cd python-scaleioclient
+        #                   python setup.py install''')
+        #vm_execute_command(ipaddr, username, password,
+        #                   'sed -i -e "s|## images_type=sio|images_type=sio|g" /git/devstack/local.conf')
 
 
 def run_postinstall(ipaddr, args):
