@@ -205,7 +205,7 @@ def template_clone(name, vm_name, args, si):
 
     vmconf = vim.vm.ConfigSpec()
     vmconf.numCPUs = args.VM_CPU
-    vmconf.memoryMB = (args.VM_MEMORY * 1024)
+    vmconf.memoryMB = args.VM_MEMORY * 1024
 
     clonespec = vim.vm.CloneSpec(powerOn=False, template=False, customization=None, location=relocateSpec)
     clonespec.config = vmconf
