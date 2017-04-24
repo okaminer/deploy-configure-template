@@ -199,7 +199,13 @@ def template_clone(name, vm_name, args, si):
         datastore = get_obj(si.RetrieveContent(), [vim.Datastore], args.DATASTORE)
         relocateSpec.datastore = datastore
 
+    vmconf = vim.vm.ConfigSpec()
+    vmconf.numCPUs = 4
+    vmconf.memoryMB = 8192
+
     clonespec = vim.vm.CloneSpec(powerOn=False, template=False, customization=None, location=relocateSpec)
+    clonespec.config = vmconf
+
     folder = get_obj(si.RetrieveContent(), [vim.Folder], args.FOLDER)
     clone = template.Clone(name=vm_name, folder=folder, spec=clonespec)
     wait_for_task(clone, si)
