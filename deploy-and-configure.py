@@ -292,7 +292,7 @@ def setup_devstack(ipaddr, username, password, args, services_ip):
         # note, installing with pip only works on Pike+
         # we need to clone https://github.com/codedellemc/python-scaleioclient
         # checkout the newton branch, and run python setup.py install
-        echo "Moved setup of ephemeral requirements to setup_devstack"
+        print('Moved setup of ephemeral requirements to setup_devstack')
         #vm_execute_command(ipaddr, username, password,
         #                   '''cd /git;
         #                   git clone https://github.com/codedellemc/python-scaleioclient -b newton
