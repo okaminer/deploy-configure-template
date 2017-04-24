@@ -26,6 +26,10 @@ def setup_arguments():
     # vm settings
     parser.add_argument('--vm_prefix', dest='VM_PREFIX', action='store', required=True,
                         help='VM to create/configure')
+    parser.add_argument('--vm_cpu', dest='VM_CPU', action='store', required=False,
+                        type=int, default=4, help='Number of virtual CPU fpr the VM')
+    parser.add_argument('--vm_memory', dest='VM_MEMORY', action='store', required=False,
+                        type=int, default=8, help='GB of memory for the VM')
     parser.add_argument('--vm_ip', dest='VM_IP', action='store',
                         help='IP address to assign to the VM, ignored if DHCP')
     parser.add_argument('--subnet', dest='SUBNET', action='store',
@@ -200,8 +204,8 @@ def template_clone(name, vm_name, args, si):
         relocateSpec.datastore = datastore
 
     vmconf = vim.vm.ConfigSpec()
-    vmconf.numCPUs = 4
-    vmconf.memoryMB = 8192
+    vmconf.numCPUs = args.VM_CPU
+    vmconf.memoryMB = (args.VM_MEMORY * 1024)
 
     clonespec = vim.vm.CloneSpec(powerOn=False, template=False, customization=None, location=relocateSpec)
     clonespec.config = vmconf
