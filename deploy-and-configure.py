@@ -280,10 +280,7 @@ def setup_devstack(ipaddr, username, password, args, services_ip):
             _all_env = _all_env + "export "+k+"=\""+str(getattr(args, k))+"\"\n"
 
     # setup some things needed for devstack and/or tox
-    command = ("apt-get update; "
-               "apt-get install -y python-pip python-gdbm; "
-               "apt-get install -y build-essential libpg-dev python3-dev virtualenv;"
-               "apt-get install -y git")
+    command = ("( apt-get update && apt-get install -y git ) || yum install -y git")
     vm_execute_command(ipaddr, username, password, command)
 
     vm_execute_command(ipaddr, username, password,
@@ -301,20 +298,6 @@ def setup_devstack(ipaddr, username, password, args, services_ip):
     if ( ipaddr != services_ip ):
         command = command + services_ip
     vm_execute_command(ipaddr, username, password, command)
-
-    if args.EPHEMERAL:
-        # note, installing with pip only works on Pike+
-        # we need to clone https://github.com/codedellemc/python-scaleioclient
-        # checkout the newton branch, and run python setup.py install
-        print('Moved setup of ephemeral requirements to setup_devstack')
-        #vm_execute_command(ipaddr, username, password,
-        #                   '''cd /git;
-        #                   git clone https://github.com/codedellemc/python-scaleioclient -b newton
-        #                   cd python-scaleioclient
-        #                   python setup.py install''')
-        #vm_execute_command(ipaddr, username, password,
-        #                   'sed -i -e "s|## images_type=sio|images_type=sio|g" /git/devstack/local.conf')
-
 
 def run_postinstall(ipaddr, args):
     if args.DEVSTACK or args.TEMPEST_CINDER or args.TEMPEST_NOVA:
