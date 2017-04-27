@@ -279,16 +279,17 @@ def setup_devstack(ipaddr, username, password, args, services_ip):
             # print("export "+k+"=\""+str(getattr(args, k))+"\";")
             _all_env = _all_env + "export "+k+"=\""+str(getattr(args, k))+"\"\n"
 
-    # setup some things needed for devstack and/or tox
+    # make sure git is installed, create the /git directory
     command = ("( apt-get update && apt-get install -y git ) || yum install -y git")
     vm_execute_command(ipaddr, username, password, command)
+    command = ("cd /; mkdir git; chmod -R 777 /git; "
+               "cd /git; git clone https://github.com/eric-young/devstack-tools.git")
+    vm_execute_command(ipaddr, username, password, command)
+    # place all the environment variables in a file to source later
+    command = ("echo \'" + _all_env + "'\ | sort > /git/devstack.environment")
+    vm_execute_command(ipaddr, username, password, command)
+                       # 'echo \''+_all_env+'\' | sort > /git/devstack.environment')
 
-    vm_execute_command(ipaddr, username, password,
-                       'cd /; mkdir git; chmod -R 777 /git')
-    vm_execute_command(ipaddr, username, password,
-                       'cd /git; git clone https://github.com/eric-young/devstack-tools.git')
-    vm_execute_command(ipaddr, username, password,
-                       'echo \''+_all_env+'\' | sort > /git/devstack.environment')
     # for setting up devstack, only the first node gets services
     # subsequent nodes get compute only
     # we check this with the 'services_ip' argument:
