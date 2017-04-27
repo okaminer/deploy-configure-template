@@ -83,6 +83,10 @@ def setup_arguments():
                         help='If provided, sets up Nova to use ephemeral disks on ScaleIO')
 
     # scaleio settings, used by cinder
+    parser.add_argument('--sio_username', dest='SIO_USERNAME', action='store',
+                        default='admin', help='SIO Username, default is \"admin\"')
+    parser.add_argument('--sio_password', dest='SIO_PASSWORD', action='store',
+                        default='Scaleio123', help='SIO Password, default is \"Scaleio123\"')
     parser.add_argument('--cinder_sio_gateway', dest='CINDER_SIO_GATEWAY', action='store', required=True,
                         help='SIO Gateway address')
     parser.add_argument('--cinder_sio_pd', dest='CINDER_SIO_PD', action='store',
