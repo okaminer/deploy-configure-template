@@ -282,9 +282,11 @@ def setup_devstack(ipaddr, username, password, args, services_ip):
     # make sure git is installed, create the /git directory
     command = ("( apt-get update && apt-get install -y git ) || yum install -y git")
     vm_execute_command(ipaddr, username, password, command)
+    # pull down the devstack-tools repo
     command = ("cd /; mkdir git; chmod -R 777 /git; "
                "cd /git; git clone https://github.com/eric-young/devstack-tools.git")
     vm_execute_command(ipaddr, username, password, command)
+
     # place all the environment variables in a file to source later
     command = ("echo \'" + _all_env + "'\ | sort > /git/devstack.environment")
     vm_execute_command(ipaddr, username, password, command)
@@ -301,6 +303,10 @@ def setup_devstack(ipaddr, username, password, args, services_ip):
     vm_execute_command(ipaddr, username, password, command)
 
 def run_postinstall(ipaddr, args):
+    # pull down some help utilities
+    command = ("cd /git; git clone https://github.com/tssgery/utilities.git")
+    vm_execute_command(ipaddr, 'stack', 'stack', command)    
+
     if args.DEVSTACK or args.TEMPEST_CINDER or args.TEMPEST_NOVA:
         vm_execute_command(ipaddr, 'stack', 'stack',
                            'cd /git/devstack; ./stack.sh')
