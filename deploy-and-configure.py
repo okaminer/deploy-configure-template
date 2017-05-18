@@ -286,10 +286,10 @@ def setup_devstack(ipaddr, username, password, args, services_ip):
     # add all the nodes to each nodes /etc/hosts file
     all_ips = args.VM_IP.split(",")
     for ipaddress in all_ips:
-        if ipaddress is not ipaddr:
+        if ipaddress != ipaddr:
             hostname=get_hostname(args.VM_PREFIX, ipaddress)
-            command = "echo \"{} {} {}.{}\" >> /etc/hosts"
-            command.format(ipaddress, hostname, hostname, args.DOMAIN)
+            command = "echo \"{0} {1} {2}.{3}\" >> /etc/hosts"
+            command = command.format(ipaddress, hostname, hostname, args.DOMAIN)
             vm_execute_command(ipaddr, username, password, command)
 
     # make sure git is installed, create the /git directory
