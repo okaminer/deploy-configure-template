@@ -258,7 +258,7 @@ def vm_configure(vm_name, ip, subnet, gateway, dns, domain, si):
     # Wait for Network Reconfigure to complete
     wait_for_task(task, si)
 
-def _get_hostname(prefix, ipaddr):
+def get_hostname(prefix, ipaddr):
     vm_name=prefix + "-" + ipaddr
     vm_name=vm_name.replace(".", "-")
 
@@ -310,7 +310,7 @@ def run_postinstall(ipaddr, args):
     all_ips = args.VM_IP.split(",")
     for ipaddress in all_ips:
         if ipaddress is not ipaddr:
-            hostname=_get_hostname(args.VM_PREFIX, ipaddress)
+            hostname=get_hostname(args.VM_PREFIX, ipaddress)
             command = "{} {} {}.{} >> /etc/hosts"
             command.format(ipaddress, hostname, hostname, args.DOMAIN)
             vm_execute_command(ipaddr, username, password, command)
@@ -359,7 +359,7 @@ def main():
     all_ip_addresses = args.VM_IP.split(",")
     for ipaddress in all_ip_addresses:
         # work on the services VM
-        vm_name=_get_hostname(args.VM_PREFIX, ipaddress)
+        vm_name=get_hostname(args.VM_PREFIX, ipaddress)
 
         # delete existing vm
         vm_delete(vm_name, si)
