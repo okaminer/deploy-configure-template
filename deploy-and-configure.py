@@ -283,6 +283,15 @@ def setup_devstack(ipaddr, username, password, args, services_ip):
             # print("export "+k+"=\""+str(getattr(args, k))+"\";")
             _all_env = _all_env + "export "+k+"=\""+str(getattr(args, k))+"\"\n"
 
+    # add all the nodes to each nodes /etc/hosts file
+    all_ips = args.VM_IP.split(",")
+    for ipaddress in all_ips:
+        if ipaddress is not ipaddr:
+            hostname=get_hostname(args.VM_PREFIX, ipaddress)
+            command = "{} {} {}.{} >> /etc/hosts"
+            command.format(ipaddress, hostname, hostname, args.DOMAIN)
+            vm_execute_command(ipaddr, username, password, command)
+
     # make sure git is installed, create the /git directory
     command = ("( apt-get update && apt-get install -y git ) || yum install -y git")
     vm_execute_command(ipaddr, username, password, command)
@@ -307,15 +316,6 @@ def setup_devstack(ipaddr, username, password, args, services_ip):
     vm_execute_command(ipaddr, username, password, command)
 
 def run_postinstall(ipaddr, args):
-    # add all the nodes to each nodes /etc/hosts file
-    all_ips = args.VM_IP.split(",")
-    for ipaddress in all_ips:
-        if ipaddress is not ipaddr:
-            hostname=get_hostname(args.VM_PREFIX, ipaddress)
-            command = "{} {} {}.{} >> /etc/hosts"
-            command.format(ipaddress, hostname, hostname, args.DOMAIN)
-            vm_execute_command(ipaddr, username, password, command)
-
     # pull down some helpful utilities
     command = ("cd /git; git clone https://github.com/tssgery/utilities.git")
     vm_execute_command(ipaddr, 'stack', 'stack', command)
