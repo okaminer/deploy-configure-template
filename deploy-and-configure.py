@@ -258,6 +258,9 @@ def vm_configure(vm_name, ip, subnet, gateway, dns, domain, si):
     # Wait for Network Reconfigure to complete
     wait_for_task(task, si)
 
+def _get_hostname(self, prefix, ipaddr):
+    vm_name=prefix + "-" + ipaddr
+    vm_name=vm_name.replace(".", "-")
 
 def vm_execute_command(ipaddr, username, password, command):
     print("Executing Command against %s: %s" % (ipaddr, command))
@@ -303,9 +306,18 @@ def setup_devstack(ipaddr, username, password, args, services_ip):
     vm_execute_command(ipaddr, username, password, command)
 
 def run_postinstall(ipaddr, args):
-    # pull down some help utilities
+    # add all the nodes to each nodes /etc/hosts file
+    all_ips = args.VM_IP.split(",")
+    for ipaddress in all_ips:
+        if ipaddress is not ipaddr:
+            hostname=self._get_hostname(args.VM_PREFIX, ipaddress)
+            command = (echo "%s %s %s.%s >> /etc/hosts" %
+                (ipaddress, hostname, hostname, args.DOMAIN))
+            vm_execute_command(ipaddr, username, password, command)
+
+    # pull down some helpful utilities
     command = ("cd /git; git clone https://github.com/tssgery/utilities.git")
-    vm_execute_command(ipaddr, 'stack', 'stack', command)    
+    vm_execute_command(ipaddr, 'stack', 'stack', command)
 
     if args.DEVSTACK or args.TEMPEST_CINDER or args.TEMPEST_NOVA:
         vm_execute_command(ipaddr, 'stack', 'stack',
@@ -347,8 +359,7 @@ def main():
     all_ip_addresses = args.VM_IP.split(",")
     for ipaddress in all_ip_addresses:
         # work on the services VM
-        vm_name=args.VM_PREFIX + "-" + ipaddress
-        vm_name=vm_name.replace(".", "-")
+        vm_name=self._get_hostname(args.VM_PREFIX, ipaddress)
 
         # delete existing vm
         vm_delete(vm_name, si)
