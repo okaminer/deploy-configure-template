@@ -311,8 +311,8 @@ def run_postinstall(ipaddr, args):
     for ipaddress in all_ips:
         if ipaddress is not ipaddr:
             hostname=self._get_hostname(args.VM_PREFIX, ipaddress)
-            command = (echo "%s %s %s.%s >> /etc/hosts" %
-                (ipaddress, hostname, hostname, args.DOMAIN))
+            command = "{} {} {}.{} >> /etc/hosts"
+            command.format(ipaddress, hostname, hostname, args.DOMAIN)
             vm_execute_command(ipaddr, username, password, command)
 
     # pull down some helpful utilities
