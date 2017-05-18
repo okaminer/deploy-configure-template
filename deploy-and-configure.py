@@ -261,6 +261,7 @@ def vm_configure(vm_name, ip, subnet, gateway, dns, domain, si):
 def get_hostname(prefix, ipaddr):
     vm_name=prefix + "-" + ipaddr
     vm_name=vm_name.replace(".", "-")
+    return vm_name
 
 def vm_execute_command(ipaddr, username, password, command):
     print("Executing Command against %s: %s" % (ipaddr, command))
