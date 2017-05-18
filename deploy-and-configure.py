@@ -288,7 +288,7 @@ def setup_devstack(ipaddr, username, password, args, services_ip):
     for ipaddress in all_ips:
         if ipaddress is not ipaddr:
             hostname=get_hostname(args.VM_PREFIX, ipaddress)
-            command = "{} {} {}.{} >> /etc/hosts"
+            command = "echo \"{} {} {}.{}\" >> /etc/hosts"
             command.format(ipaddress, hostname, hostname, args.DOMAIN)
             vm_execute_command(ipaddr, username, password, command)
 
