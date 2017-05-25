@@ -244,7 +244,7 @@ def vm_configure(vm_name, ip, subnet, gateway, dns, domain, si):
     adaptermap.adapter.dnsDomain = domain[0]
 
     # For Linux . For windows follow sysprep
-    ident = vim.vm.customization.LinuxPrep(domain=domain,
+    ident = vim.vm.customization.LinuxPrep(domain=domain[0],
                                            hostName=vim.vm.customization.FixedName(name=vm_name))
 
     customspec = vim.vm.customization.Specification()
