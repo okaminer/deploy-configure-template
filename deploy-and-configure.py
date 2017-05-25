@@ -228,7 +228,6 @@ def vm_configure(vm_name, ip, subnet, gateway, dns, domain, si):
         sys.exit()
 
     adaptermap = vim.vm.customization.AdapterMapping()
-    globalip = vim.vm.customization.GlobalIPSettings()
     adaptermap.adapter = vim.vm.customization.IPSettings()
     globalip = vim.vm.customization.GlobalIPSettings()
 
@@ -240,11 +239,11 @@ def vm_configure(vm_name, ip, subnet, gateway, dns, domain, si):
 
     # both dnsServerList and sndSuffix list can take lists of values
     # convert the comma seperated arguments into lists while setting them
-    globalip.dnsServerList = dns.split(',')
-    globalip.dnsSuffixList = domain.split(',')
+    globalip.dnsServerList = dns
+    globalip.dnsSuffixList = domain
 
     # set the local domain to the first one in the list
-    adaptermap.adapter.dnsDomain = domain.split(',')[0]
+    adaptermap.adapter.dnsDomain = domain[0]
 
     # For Linux . For windows follow sysprep
     ident = vim.vm.customization.LinuxPrep(domain=domain,
