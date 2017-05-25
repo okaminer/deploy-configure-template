@@ -237,8 +237,11 @@ def vm_configure(vm_name, ip, subnet, gateway, dns, domain, si):
     adaptermap.adapter.ip.ipAddress = ip
     adaptermap.adapter.subnetMask = subnet
     adaptermap.adapter.gateway = gateway
-    globalip.dnsServerList = dns
-    globalip.dnsSuffixList = domain
+
+    # both dnsServerList and sndSuffix list can take lists of values
+    # convert the comma seperated arguments into lists while setting them
+    globalip.dnsServerList = dns.split(',')
+    globalip.dnsSuffixList = domain.split(',')
 
     adaptermap.adapter.dnsDomain = domain
 
