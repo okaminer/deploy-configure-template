@@ -243,7 +243,8 @@ def vm_configure(vm_name, ip, subnet, gateway, dns, domain, si):
     globalip.dnsServerList = dns.split(',')
     globalip.dnsSuffixList = domain.split(',')
 
-    adaptermap.adapter.dnsDomain = domain
+    # set the local domain to the first one in the list
+    adaptermap.adapter.dnsDomain = domain.split(',')[0]
 
     # For Linux . For windows follow sysprep
     ident = vim.vm.customization.LinuxPrep(domain=domain,
