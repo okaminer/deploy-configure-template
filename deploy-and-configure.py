@@ -38,7 +38,7 @@ def setup_arguments():
                         help='Gateway for the VM, ignored if DHCP')
     parser.add_argument('--dns', dest='DNS', action='store', nargs='*',
                         help='DNS servers, ignored if DHCP')
-    parser.add_argument('--domain', dest='DOMAIN', action='store', required=True,
+    parser.add_argument('--domain', dest='DOMAIN', action='store', nargs='+', required=True,
                         help='domain name of the VM')
     parser.add_argument('--template', dest='TEMPLATE', action='store', required=True,
                         help='Template to clone')
@@ -237,8 +237,6 @@ def vm_configure(vm_name, ip, subnet, gateway, dns, domain, si):
     adaptermap.adapter.subnetMask = subnet
     adaptermap.adapter.gateway = gateway
 
-    # both dnsServerList and sndSuffix list can take lists of values
-    # convert the comma seperated arguments into lists while setting them
     globalip.dnsServerList = dns
     globalip.dnsSuffixList = domain
 
