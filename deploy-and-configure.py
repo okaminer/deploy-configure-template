@@ -290,7 +290,7 @@ def setup_devstack(ipaddr, username, password, args, services_ip):
         if ipaddress != ipaddr:
             hostname=get_hostname(args.VM_PREFIX, ipaddress)
             command = "echo \"{0} {1} {2}.{3}\" >> /etc/hosts"
-            command = command.format(ipaddress, hostname, hostname, args.DOMAIN)
+            command = command.format(ipaddress, hostname, hostname, args.DOMAIN[0])
             vm_execute_command(ipaddr, username, password, command)
 
     # make sure git is installed, create the /git directory
