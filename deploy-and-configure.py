@@ -219,9 +219,13 @@ def template_clone(name, vm_name, args, si):
     wait_for_task(clone, si)
 
 def vm_configure(vm_name, ip, subnet, gateway, dns, domain, si):
+
+    print("Reconfiguring the VM: %s" % vm_name)
+
     vm = get_obj(si.RetrieveContent(), [vim.VirtualMachine], vm_name)
     if vm is None:
-        return
+        print("Error: Unable to find VM")
+        sys.exit()
 
     if vm.runtime.powerState != 'poweredOff':
         print("Error. The VM must be off before reconfiguring")
@@ -253,7 +257,6 @@ def vm_configure(vm_name, ip, subnet, gateway, dns, domain, si):
     customspec.nicSettingMap = [adaptermap]
     customspec.globalIPSettings = globalip
 
-    print("Reconfiguring the VM: %s" % vm_name)
     task = vm.Customize(spec=customspec)
 
     # Wait for Network Reconfigure to complete
