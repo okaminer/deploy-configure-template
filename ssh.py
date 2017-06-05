@@ -8,10 +8,10 @@ class ssh:
     client = None
 
 
-    def __init__(self, address, username, password):
+    def __init__(self, address, username, password, numTries=60):
         i = 0
         while True:
-            print("Trying to connect to %s (%i/30)" % (address, i))
+            print("Trying to connect to %s (%i/%d)" % (address, i, numTries))
 
             try:
                 print("Connecting to server.")
@@ -29,7 +29,7 @@ class ssh:
 
             i += 1
             # If we could not connect within time limit
-            if i == 60:
+            if i == numTries:
                 print("Could not connect to %s. Giving up" % address)
                 sys.exit(1)
 

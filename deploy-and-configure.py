@@ -153,6 +153,12 @@ def wait_for_task(task, actionName='job', hideResult=False):
 
     return task.info.result
 
+def vm_poweroff(ipaddr, username, password):
+    """Shuts down a node, by sshing into it and running shutdown"""
+    
+    vm_execute_command(ipaddr, username, password,
+             'shutdown -h now', numTries=2)
+    return
 
 def vm_delete(name, si):
     vm = get_obj(si.RetrieveContent(), [vim.VirtualMachine], name)
@@ -267,9 +273,9 @@ def get_hostname(prefix, ipaddr):
     vm_name=vm_name.replace(".", "-")
     return vm_name
 
-def vm_execute_command(ipaddr, username, password, command):
+def vm_execute_command(ipaddr, username, password, command, numTries=60):
     print("Executing Command against %s: %s" % (ipaddr, command))
-    connection = ssh(ipaddr, username, password)
+    connection = ssh(ipaddr, username, password, numTries=numTries)
     output = connection.sendCommand(command, showoutput=True)
     return
 
@@ -365,6 +371,8 @@ def main():
     for ipaddress in all_ip_addresses:
         # work on the services VM
         vm_name=get_hostname(args.VM_PREFIX, ipaddress)
+
+        vm_poweroff(ipaddress, args.VM_USERNAME, args.VM_PASSWORD)
 
         # delete existing vm
         vm_delete(vm_name, si)
