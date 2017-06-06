@@ -157,8 +157,12 @@ def vm_poweroff(ipaddr, username, password):
     """
     Shuts down a node, by sshing into it and running shutdown
     """
-    vm_execute_command(ipaddr, username, password,
-             'shutdown -h now', numTries=2)
+    try:
+        vm_execute_command(ipaddr, username, password,
+                           'shutdown -h now', numTries=2)
+    except:
+        pass
+
     return
 
 def vm_delete(name, si):
