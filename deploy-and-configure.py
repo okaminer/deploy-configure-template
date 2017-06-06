@@ -154,13 +154,17 @@ def wait_for_task(task, actionName='job', hideResult=False):
     return task.info.result
 
 def vm_poweroff(ipaddr, username, password):
-    """Shuts down a node, by sshing into it and running shutdown"""
-    
+    """
+    Shuts down a node, by sshing into it and running shutdown
+    """
     vm_execute_command(ipaddr, username, password,
              'shutdown -h now', numTries=2)
     return
 
 def vm_delete(name, si):
+    """
+    Delete a vm based upon it's name
+    """
     vm = get_obj(si.RetrieveContent(), [vim.VirtualMachine], name)
     if vm is None:
         return
@@ -176,6 +180,9 @@ def vm_delete(name, si):
 
 
 def vm_poweron(name, si):
+    """
+    Power on a VM based upon it's name
+    """
     vm = get_obj(si.RetrieveContent(), [vim.VirtualMachine], name)
     if vm is None:
         return
@@ -187,6 +194,9 @@ def vm_poweron(name, si):
 
 
 def template_clone(name, vm_name, args, si):
+    """
+    Clone a template into a VM
+    """
     print("Cloning template: %s" % name)
     template = get_obj(si.RetrieveContent(), [vim.VirtualMachine], name)
     if template is None:
@@ -225,7 +235,9 @@ def template_clone(name, vm_name, args, si):
     wait_for_task(clone, si)
 
 def vm_configure(vm_name, ip, subnet, gateway, dns, domain, si):
-
+    """
+    Configure a VM, requires open-vm-tools to be installed
+    """
     print("Reconfiguring the VM: %s" % vm_name)
 
     vm = get_obj(si.RetrieveContent(), [vim.VirtualMachine], vm_name)
@@ -269,11 +281,17 @@ def vm_configure(vm_name, ip, subnet, gateway, dns, domain, si):
     wait_for_task(task, si)
 
 def get_hostname(prefix, ipaddr):
+    """
+    Format a hostname based on prefix and ip address
+    """
     vm_name=prefix + "-" + ipaddr
     vm_name=vm_name.replace(".", "-")
     return vm_name
 
 def vm_execute_command(ipaddr, username, password, command, numTries=60):
+    """
+    Execute a command via ssh
+    """
     print("Executing Command against %s: %s" % (ipaddr, command))
     connection = ssh(ipaddr, username, password, numTries=numTries)
     output = connection.sendCommand(command, showoutput=True)
@@ -281,6 +299,12 @@ def vm_execute_command(ipaddr, username, password, command, numTries=60):
 
 
 def setup_devstack(ipaddr, username, password, args, services_ip):
+    """
+    Prepare a host to run devstack
+
+    This includes installing some pre-reqs as well as
+    cloning a git repo that configures devstack properly
+    """
     # wait for the ipaddr to become available...
     vm_execute_command(ipaddr, username, password, 'uptime')
 
@@ -326,6 +350,11 @@ def setup_devstack(ipaddr, username, password, args, services_ip):
     vm_execute_command(ipaddr, username, password, command)
 
 def run_postinstall(ipaddr, args):
+    """
+    Perform any post-install functions
+
+    This includes installing utilities and/or starting devstack
+    """
     # pull down some helpful utilities
     command = ("cd /git; git clone https://github.com/tssgery/utilities.git")
     vm_execute_command(ipaddr, 'stack', 'stack', command)
@@ -335,6 +364,9 @@ def run_postinstall(ipaddr, args):
                            'cd /git/devstack; ./stack.sh')
 
 def run_postinstall_services_only(ipaddr, args):
+    """
+    Perform any post-install steps for the nodes running control plane
+    """
     if args.TOX:
         vm_execute_command(ipaddr, 'stack', 'stack',
                  '/git/devstack-tools/bin/run-tox')
@@ -350,6 +382,9 @@ def run_postinstall_services_only(ipaddr, args):
                  '''/git/devstack-tools/bin/run-tempest-nova''')
 
 def main():
+    """
+    Main logic
+    """
     context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
     context.verify_mode = ssl.CERT_NONE
 
