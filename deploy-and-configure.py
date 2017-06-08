@@ -81,8 +81,6 @@ def setup_arguments():
                         help='Nova branch, default is whatever branch is used for \"openstack_release\"')
     parser.add_argument('--ephemeral', dest='EPHEMERAL', action='store_true',
                         help='If provided, sets up Nova to use ephemeral disks on ScaleIO')
-    parser.add_argument('--glance', dest='GLANCE', action='store_true',
-                        help='If provided, configures Cinder as backend to Glance')
 
     # scaleio settings, used by cinder
     parser.add_argument('--sio_username', dest='SIO_USERNAME', action='store',
