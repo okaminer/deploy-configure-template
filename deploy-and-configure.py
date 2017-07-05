@@ -30,7 +30,7 @@ def setup_arguments():
                         type=int, default=4, help='Number of virtual CPU fpr the VM')
     parser.add_argument('--vm_memory', dest='VM_MEMORY', action='store', required=False,
                         type=int, default=8, help='GB of memory for the VM')
-    parser.add_argument('--vm_ip', dest='VM_IP', action='store',
+    parser.add_argument('--vm_ip', dest='VM_IP', action='store', nargs='*',
                         help='IP address to assign to the VM, ignored if DHCP')
     parser.add_argument('--subnet', dest='SUBNET', action='store',
                         help='Subnet for the VM, ignored if DHCP')
@@ -54,48 +54,6 @@ def setup_arguments():
                         default='root', help='VM username, default is \"root\"')
     parser.add_argument('--vm_password', dest='VM_PASSWORD', action='store',
                         default='password', help='VM password, default is \"password\"')
-    parser.add_argument('--vm_compute_ips', dest='VM_COMPUTE', action='store',
-                        help='IP address of nodes to setup as compute only (comma seperated)')
-
-    # cinder and openstack arguments
-    parser.add_argument('--openstack_release', dest='OPENSTACK_RELEASE', action='store',
-                        default='master',
-                        help='OpenStack Release. Default is  \"master\"')
-    parser.add_argument('--cinder_repo', dest='CINDER_REPO', action='store',
-                        default='http://git.openstack.org/openstack/cinder',
-                        help='Cinder GIT repo, default is \"http://git.openstack.org/openstack/cinder\"')
-    parser.add_argument('--cinder_branch', dest='CINDER_BRANCH', action='store',
-                        help='Cinder branch, default is whatever branch is used for \"openstack_release\"')
-    parser.add_argument('--tox', dest='TOX', action='store_true',
-                        help='If provided, run tox [after starting Devstack, if applicable]')
-    parser.add_argument('--tempest_cinder', dest='TEMPEST_CINDER', action='store_true',
-                        help='If provided, run Cinder tempest tests [implies starting DevStack]')
-    parser.add_argument('--tempest_nova', dest='TEMPEST_NOVA', action='store_true',
-                        help='If provided, run Nova tempest tests [implies starting DevStack]')
-    parser.add_argument('--devstack', dest='DEVSTACK', action='store_true',
-                        help='If provided, start devstack')
-    parser.add_argument('--nova_repo', dest='NOVA_REPO', action='store',
-                        default='http://git.openstack.org/openstack/nova',
-                        help='Nova GIT repo, default is \"http://git.openstack.org/openstack/nova\"')
-    parser.add_argument('--nova_branch', dest='NOVA_BRANCH', action='store',
-                        help='Nova branch, default is whatever branch is used for \"openstack_release\"')
-    parser.add_argument('--ephemeral', dest='EPHEMERAL', action='store_true',
-                        help='If provided, sets up Nova to use ephemeral disks on ScaleIO')
-
-    # scaleio settings, used by cinder
-    parser.add_argument('--sio_username', dest='SIO_USERNAME', action='store',
-                        default='admin', help='SIO Username, default is \"admin\"')
-    parser.add_argument('--sio_password', dest='SIO_PASSWORD', action='store',
-                        default='Scaleio123', help='SIO Password, default is \"Scaleio123\"')
-    parser.add_argument('--cinder_sio_gateway', dest='CINDER_SIO_GATEWAY', action='store', required=True,
-                        help='SIO Gateway address')
-    parser.add_argument('--cinder_sio_pd', dest='CINDER_SIO_PD', action='store',
-                        default='default', help='SIO Protection Domain, default is \"default\"')
-    parser.add_argument('--cinder_sio_sp', dest='CINDER_SIO_SP', action='store',
-                        default='default', help='SIO Storage Pool, default is \"default\"')
-    parser.add_argument('--cinder_sio_mdm_ips', dest='CINDER_SIO_MDM_IPS', action='store', required=True,
-                        help='SIO MDM IP addresses (comma delimted)')
-
 
     # return the parser object
     return parser
@@ -158,7 +116,7 @@ def vm_poweroff(ipaddr, username, password):
     Shuts down a node, by sshing into it and running shutdown
     """
     try:
-        vm_execute_command(ipaddr, username, password,
+        node_execute_command(ipaddr, username, password,
                            'shutdown -h now', numTries=2)
     except:
         pass
@@ -292,98 +250,35 @@ def get_hostname(prefix, ipaddr):
     vm_name=vm_name.replace(".", "-")
     return vm_name
 
-def vm_execute_command(ipaddr, username, password, command, numTries=60):
+def node_execute_command(ipaddr, username, password, command, numTries=60):
     """
     Execute a command via ssh
     """
     print("Executing Command against %s: %s" % (ipaddr, command))
     connection = ssh(ipaddr, username, password, numTries=numTries)
     output = connection.sendCommand(command, showoutput=True)
-    return
+    return output
 
 
-def setup_devstack(ipaddr, username, password, args, services_ip):
+def setup_node(ipaddr, username, password, args):
     """
-    Prepare a host to run devstack
+    Prepare a node
 
-    This includes installing some pre-reqs as well as
-    cloning a git repo that configures devstack properly
     """
-    # wait for the ipaddr to become available...
-    vm_execute_command(ipaddr, username, password, 'uptime')
+    _commands=[]
+    _commands.append('uptime')
+    _commands.append('( apt-get update && apt-get install -y git ) || yum install -y git')
 
-    # this is kind of ugly, but lets take all the provided arguments
-    # and build them into environment variables that can be interpreted
-    # remotely
-    _all_env = ""
-    for k in vars(args):
-        if (getattr(args,k)) is not None:
-            # print("export "+k+"=\""+str(getattr(args, k))+"\";")
-            _all_env = _all_env + "export "+k+"=\""+str(getattr(args, k))+"\"\n"
+    for cmd in _commands:
+        node_execute_command(ipaddr, username, password, cmd)
 
     # add all the nodes to each nodes /etc/hosts file
-    all_ips = args.VM_IP.split(",")
-    for ipaddress in all_ips:
+    for ipaddress in args.VM_IP:
         if ipaddress != ipaddr:
-            hostname=get_hostname(args.VM_PREFIX, ipaddress)
+            hostname = get_hostname(args.VM_PREFIX, ipaddress)
             command = "echo \"{0} {1} {2}.{3}\" >> /etc/hosts"
             command = command.format(ipaddress, hostname, hostname, args.DOMAIN[0])
-            vm_execute_command(ipaddr, username, password, command)
-
-    # make sure git is installed, create the /git directory
-    command = ("( apt-get update && apt-get install -y git ) || yum install -y git")
-    vm_execute_command(ipaddr, username, password, command)
-    # pull down the devstack-tools repo
-    command = ("cd /; mkdir git; chmod -R 777 /git; "
-               "cd /git; git clone https://github.com/eric-young/devstack-tools.git")
-    vm_execute_command(ipaddr, username, password, command)
-
-    # place all the environment variables in a file to source later
-    command = ("echo \'" + _all_env + "'\ | sort > /git/devstack.environment")
-    vm_execute_command(ipaddr, username, password, command)
-                       # 'echo \''+_all_env+'\' | sort > /git/devstack.environment')
-
-    # for setting up devstack, only the first node gets services
-    # subsequent nodes get compute only
-    # we check this with the 'services_ip' argument:
-    #      If ipaddr==services_ip, then we are settng up the services
-    command = ("cd /git/devstack-tools; source /git/devstack.environment; "
-               "bin/setup-devstack " + ipaddr + " ")
-    if ( ipaddr != services_ip ):
-        command = command + services_ip
-    vm_execute_command(ipaddr, username, password, command)
-
-def run_postinstall(ipaddr, args):
-    """
-    Perform any post-install functions
-
-    This includes installing utilities and/or starting devstack
-    """
-    # pull down some helpful utilities
-    command = ("cd /git; git clone https://github.com/tssgery/utilities.git")
-    vm_execute_command(ipaddr, 'stack', 'stack', command)
-
-    if args.DEVSTACK or args.TEMPEST_CINDER or args.TEMPEST_NOVA:
-        vm_execute_command(ipaddr, 'stack', 'stack',
-                           'cd /git/devstack; ./stack.sh')
-
-def run_postinstall_services_only(ipaddr, args):
-    """
-    Perform any post-install steps for the nodes running control plane
-    """
-    if args.TOX:
-        vm_execute_command(ipaddr, 'stack', 'stack',
-                 '/git/devstack-tools/bin/run-tox')
-
-    if args.TEMPEST_CINDER:
-        vm_execute_command(ipaddr, 'stack', 'stack',
-                 '''source /git/devstack/openrc admin && '''
-                 '''/git/devstack-tools/bin/run-tempest-cinder''')
-
-    if args.TEMPEST_NOVA:
-        vm_execute_command(ipaddr, 'stack', 'stack',
-                 '''source /git/devstack/openrc admin && '''
-                 '''/git/devstack-tools/bin/run-tempest-nova''')
+            node_execute_command(ipaddr, username, password, command)
 
 def main():
     """
@@ -406,8 +301,7 @@ def main():
 
     print("Connected to %s" % args.VCENTER)
 
-    all_ip_addresses = args.VM_IP.split(",")
-    for ipaddress in all_ip_addresses:
+    for ipaddress in args.VM_IP:
         # work on the services VM
         vm_name=get_hostname(args.VM_PREFIX, ipaddress)
 
@@ -434,23 +328,12 @@ def main():
     # just a short sleep here. This allows the VM to get started booting
     time.sleep(60)
 
-    all_ip_addresses = args.VM_IP.split(",")
-    for i, ipaddress in enumerate(all_ip_addresses):
-        # setup devstack on these VMs
-        # note that the fist ipaddress will get the services
-        # subsequent ipaddresses will be compute only
-        setup_devstack(ipaddress,
-                       args.VM_USERNAME,
-                       args.VM_PASSWORD,
-                       args,
-                       all_ip_addresses[0])
-
-    # run anything that needs to be run on all hosts
-    for i, ipaddress in enumerate(all_ip_addresses):
-        run_postinstall(ipaddress, args)
-
-    # run anything that gets run on first node only
-    run_postinstall_services_only(all_ip_addresses[0], args)
+    for ipaddress in args.VM_IP:
+        # perform some post clone setup
+        setup_node(ipaddress,
+                   args.VM_USERNAME,
+                   args.VM_PASSWORD,
+                   args)
 
 # Start program
 if __name__ == "__main__":
