@@ -4,6 +4,7 @@ import paramiko
 import time
 import sys
 
+
 class ssh:
     client = None
 
@@ -34,13 +35,14 @@ class ssh:
 
     def sendCommand(self, command, showoutput=False):
         if self.client:
+            all_stdout = ""
             stdin, stdout, stderr = self.client.exec_command(command)
             while not stdout.channel.exit_status_ready():
                 # Print data when available
                 if stdout.channel.recv_ready():
-                    alldata = stdout.channel.recv(1024)
+                    all_stdout = stdout.channel.recv(1024)
                     if showoutput:
-                        sys.stdout.write(alldata)
+                        sys.stdout.write(all_stdout)
                         sys.stdout.flush()
                     prevdata = b"1"
                     while prevdata:
@@ -48,8 +50,9 @@ class ssh:
                         if showoutput:
                             sys.stdout.write(prevdata)
                             sys.stdout.flush()
-                        alldata += prevdata
+                        all_stdout += prevdata
 
-                    return alldata
+            rc = stdout.channel.recv_exit_status()
+            return rc, all_stdout
         else:
             print("Connection not opened.")

@@ -11,6 +11,9 @@ from pyVmomi import vim, vmodl
 from pyVim import connect
 from pyVim.connect import Disconnect, SmartConnect
 
+class CommandFailedException(Exception):
+    def __init__(self, command):
+        Exception.__init__(self, command)
 
 def setup_arguments():
     parser = argparse.ArgumentParser(description='Clone and configure a VM')
@@ -116,6 +119,7 @@ def vm_poweroff(ipaddr, username, password):
     Shuts down a node, by sshing into it and running shutdown
     """
     try:
+        print("Powering off %s" % ipaddr)
         node_execute_command(ipaddr, username, password,
                            'shutdown -h now', numTries=2)
     except:
@@ -256,9 +260,11 @@ def node_execute_command(ipaddr, username, password, command, numTries=60):
     """
     print("Executing Command against %s: %s" % (ipaddr, command))
     connection = ssh(ipaddr, username, password, numTries=numTries)
-    output = connection.sendCommand(command, showoutput=True)
+    rc, output = connection.sendCommand(command, showoutput=True)
+    if rc is not 0:
+        print("error running: [%s] %s" % (ipaddr, command))
+        raise CommandFailedException(command)
     return output
-
 
 def setup_node(ipaddr, username, password, args):
     """
@@ -302,6 +308,7 @@ def main():
     print("Connected to %s" % args.VCENTER)
 
     for ipaddress in args.VM_IP:
+        print("Working on %s" % ipaddress)
         # work on the services VM
         vm_name=get_hostname(args.VM_PREFIX, ipaddress)
 
