@@ -2,18 +2,12 @@
 
 import atexit
 import argparse
-import sys
-import time
 import ssl
-from ssh import ssh
 
+from SSHHelper import *
 from pyVmomi import vim, vmodl
 from pyVim import connect
 from pyVim.connect import Disconnect, SmartConnect
-
-class CommandFailedException(Exception):
-    def __init__(self, command):
-        Exception.__init__(self, command)
 
 def setup_arguments():
     parser = argparse.ArgumentParser(description='Clone and configure a VM')
@@ -57,6 +51,8 @@ def setup_arguments():
                         default='root', help='VM username, default is \"root\"')
     parser.add_argument('--vm_password', dest='VM_PASSWORD', action='store',
                         default='password', help='VM password, default is \"password\"')
+    parser.add_argument('--extra_disks', dest='EXTRA_DISKS', action='store', nargs='*',
+                        help='Space separated sizes for additional disks to create, specified in GB')
 
     # return the parser object
     return parser
@@ -246,6 +242,64 @@ def vm_configure(vm_name, ip, subnet, gateway, dns, domain, si):
     # Wait for Network Reconfigure to complete
     wait_for_task(task, si)
 
+def add_disk(vm_name, si, disk_size, disk_type = 'thin'):
+
+    vm = get_obj(si.RetrieveContent(), [vim.VirtualMachine], vm_name)
+    if vm is None:
+        print("Error: Unable to find VM")
+        sys.exit()
+
+    if vm.runtime.powerState != 'poweredOff':
+        print("Error. The VM must be off before reconfiguring")
+        sys.exit()
+
+    spec = vim.vm.ConfigSpec()
+    # get all disks on a VM, set unit_number to the next available
+    unit_number = 0
+    for dev in vm.config.hardware.device:
+        if hasattr(dev.backing, 'fileName'):
+            unit_number = int(dev.unitNumber) + 1
+            # unit_number 7 reserved for scsi controller
+            if unit_number == 7:
+                unit_number += 1
+            if unit_number >= 16:
+                print "we don't support this many disks"
+                return
+        if isinstance(dev, vim.vm.device.VirtualSCSIController):
+            controller = dev
+    # add disk here
+    dev_changes = []
+    new_disk_kb = int(disk_size) * 1024 * 1024
+    disk_spec = vim.vm.device.VirtualDeviceSpec()
+    disk_spec.fileOperation = "create"
+    disk_spec.operation = vim.vm.device.VirtualDeviceSpec.Operation.add
+    disk_spec.device = vim.vm.device.VirtualDisk()
+    disk_spec.device.backing = \
+        vim.vm.device.VirtualDisk.FlatVer2BackingInfo()
+    if disk_type == 'thin':
+        disk_spec.device.backing.thinProvisioned = True
+    disk_spec.device.backing.diskMode = 'persistent'
+    disk_spec.device.unitNumber = unit_number
+    disk_spec.device.capacityInKB = new_disk_kb
+    disk_spec.device.controllerKey = controller.key
+    dev_changes.append(disk_spec)
+    spec.deviceChange = dev_changes
+    task = vm.ReconfigVM_Task(spec=spec)
+    # Wait for Network Reconfigure to complete
+    wait_for_task(task, si)
+    print "%sGB disk added to %s" % (disk_size, vm.config.name)
+
+def vm_add_disks(vm_name, disks, si):
+    """
+    Add additional disks if requested
+    """
+    if disks is None:
+        return
+
+    print("Adding Disks")
+    for d in disks:
+        add_disk(vm_name, si, d, 'thin')
+
 def get_hostname(prefix, ipaddr):
     """
     Format a hostname based on prefix and ip address
@@ -259,11 +313,12 @@ def node_execute_command(ipaddr, username, password, command, numTries=60):
     Execute a command via ssh
     """
     print("Executing Command against %s: %s" % (ipaddr, command))
-    connection = ssh(ipaddr, username, password, numTries=numTries)
+    connection = SSHHelper()
+    connection.connect(ipaddr, username, password, numTries=numTries)
     rc, output = connection.sendCommand(command, showoutput=True)
     if rc is not 0:
         print("error running: [%s] %s" % (ipaddr, command))
-        raise CommandFailedException(command)
+        raise SSHCommandFailedException(command)
     return output
 
 def setup_node(ipaddr, username, password, args):
@@ -275,16 +330,18 @@ def setup_node(ipaddr, username, password, args):
     _commands.append('uptime')
     _commands.append('( apt-get update && apt-get install -y git ) || yum install -y git')
 
-    for cmd in _commands:
-        node_execute_command(ipaddr, username, password, cmd)
-
     # add all the nodes to each nodes /etc/hosts file
     for ipaddress in args.VM_IP:
         if ipaddress != ipaddr:
             hostname = get_hostname(args.VM_PREFIX, ipaddress)
             command = "echo \"{0} {1} {2}.{3}\" >> /etc/hosts"
             command = command.format(ipaddress, hostname, hostname, args.DOMAIN[0])
-            node_execute_command(ipaddr, username, password, command)
+            _commands.append(command)
+
+    for cmd in _commands:
+        node_execute_command(ipaddr, username, password, cmd)
+
+
 
 def main():
     """
@@ -328,6 +385,7 @@ def main():
                     args.DNS,
                     args.DOMAIN,
                     si)
+        vm_add_disks(vm_name, args.EXTRA_DISKS, si)
 
         # power it on
         vm_poweron(vm_name, si)

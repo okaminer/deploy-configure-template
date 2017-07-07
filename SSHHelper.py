@@ -4,12 +4,15 @@ import paramiko
 import time
 import sys
 
+class SSHCommandFailedException(Exception):
+    def __init__(self, command):
+        Exception.__init__(self, command)
 
-class ssh:
-    client = None
+class SSHHelper:
+    def __init__(self):
+        self.client = None
 
-
-    def __init__(self, address, username, password, numTries=60):
+    def connect(self, address, username, password, numTries=60):
         i = 0
         while True:
             print("Trying to connect to %s (%i/%d)" % (address, i+1, numTries))
