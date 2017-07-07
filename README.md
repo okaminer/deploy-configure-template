@@ -13,22 +13,26 @@ Running the container without any options will show the usage information (optio
 ```
 $ docker run --rm deploy-openstack
 usage: deploy-and-configure.py [-h]
-                              --vcenter VCENTER
-                              --vcenter_password VCENTER_PASSWORD
+                               --vcenter VCENTER
+                               --vcenter_password VCENTER_PASSWORD
                                --vcenter_username VCENTER_USERNAME
                                --vm_prefix VM_PREFIX
-                               --domain DOMAIN
-                               --template TEMPLATE
-                               --folder FOLDER
-                               [--vm_ip VM_IP]
+                               [--vm_cpu VM_CPU]
+                               [--vm_memory VM_MEMORY]
+                               [--vm_ip [VM_IP [VM_IP ...]]]
                                [--subnet SUBNET]
                                [--gateway GATEWAY]
                                [--dns [DNS [DNS ...]]]
+                               --domain DOMAIN [DOMAIN ...]
+                               --template TEMPLATE
+                               --folder FOLDER
                                [--datastore DATASTORE]
                                [--host HOST]
                                [--resourcepool RESOURCEPOOL]
                                [--vm_username VM_USERNAME]
                                [--vm_password VM_PASSWORD]
+                               [--extra_disks [EXTRA_DISKS [EXTRA_DISKS ...]]]
+
 
 ```
 
