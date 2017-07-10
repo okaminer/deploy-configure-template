@@ -48,7 +48,7 @@ Build the container
 $ cd deploy-and-configure && docker build -t deploy-and-configure .
 ```
 
-Run the container with necessary arguments. The followoing example deploys two nodes at ip addresses 192.168.1.176 and 178.
+Run the container with necessary arguments. The following example deploys two nodes at ip addresses 192.168.1.176 and 178.
 ```
 docker run --rm deploy-and-configure \
 --vcenter vcenter \

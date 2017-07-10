@@ -9,6 +9,7 @@ from pyVmomi import vim, vmodl
 from pyVim import connect
 from pyVim.connect import Disconnect, SmartConnect
 
+
 def setup_arguments():
     parser = argparse.ArgumentParser(description='Clone and configure a VM')
 
@@ -52,7 +53,7 @@ def setup_arguments():
     parser.add_argument('--vm_password', dest='VM_PASSWORD', action='store',
                         default='password', help='VM password, default is \"password\"')
     parser.add_argument('--extra_disks', dest='EXTRA_DISKS', action='store', nargs='*',
-                        help='Space separated sizes for additional disks to create, specified in GB')
+                        help='Space separated sizes:mountpoints for additional disks to create, specified in GB')
 
     # return the parser object
     return parser
@@ -285,20 +286,68 @@ def add_disk(vm_name, si, disk_size, disk_type = 'thin'):
     dev_changes.append(disk_spec)
     spec.deviceChange = dev_changes
     task = vm.ReconfigVM_Task(spec=spec)
-    # Wait for Network Reconfigure to complete
+    # Wait for Disk Reconfigure to complete
     wait_for_task(task, si)
-    print "%sGB disk added to %s" % (disk_size, vm.config.name)
+    scsiid="{}:{}:0".format(controller.busNumber, unit_number)
+    print "%sGB disk added to %s as %s" % (disk_size, vm.config.name, scsiid)
+    return scsiid
 
 def vm_add_disks(vm_name, disks, si):
     """
     Add additional disks if requested
     """
     if disks is None:
-        return
+        return None
+
+    added_disks = []
 
     print("Adding Disks")
     for d in disks:
-        add_disk(vm_name, si, d, 'thin')
+        # the disks will come in the form of size:mountpoint
+        # with the [:mountpoint] being optional
+        disk_info = d.split(":")
+        disk = add_disk(vm_name, si, disk_info[0], 'thin')
+        if (len(disk_info) > 1):
+            added_disks.append("{}|{}".format(disk, disk_info[1]))
+        else:
+            added_disks.append(disk)
+
+    return added_disks
+
+def vm_create_mount_filesystem(ipaddr, username, password, device, mount):
+    command = 'uptime'
+    node_execute_command(ipaddr, username, password, command)
+    return
+
+def vm_process_disks(ipaddr, username, password, added_disks):
+    """
+    Add additional disks if requested
+    """
+    if added_disks is None:
+        return
+
+    node_execute_command(ipaddr, username, password, 'apt-get install -y lsscsi || yum install -y lsscsi')
+
+    for d in added_disks:
+        # the disks will come in the form of size:mountpoint
+        # with the [:mountpoint] being optional
+        disk = d.split("|")
+        # get the device name
+        command = "lsscsi | grep :{} | awk '{{print $NF}}'".format(disk[0])
+        device = node_execute_command(ipaddr, username, password, command)
+        if device is None:
+            print("error trying to find device name for scsi ID")
+        else:
+            device = device.strip()
+            if (len(disk)>1 and len(disk[1])>0):
+                print("Creating filesystem on %s, mounting at |%s|" % (device, disk[1]))
+                vm_create_mount_filesystem(ipaddr,
+                                           username,
+                                           password,
+                                           device,
+                                           disk[1])
+            else:
+                print("Created raw device at %s" % (device))
 
 def get_hostname(prefix, ipaddr):
     """
@@ -328,7 +377,10 @@ def setup_node(ipaddr, username, password, args):
     """
     _commands=[]
     _commands.append('uptime')
-    _commands.append('( apt-get update && apt-get install -y git ) || yum install -y git')
+    _commands.append('rpm -iUvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm || true')
+    _commands.append('apt-get install -y ansible '
+                     ' || '
+                     'yum install -y ansible')
 
     # add all the nodes to each nodes /etc/hosts file
     for ipaddress in args.VM_IP:
@@ -385,10 +437,18 @@ def main():
                     args.DNS,
                     args.DOMAIN,
                     si)
-        vm_add_disks(vm_name, args.EXTRA_DISKS, si)
+
+        # add any additional disks requested
+        added = vm_add_disks(vm_name, args.EXTRA_DISKS, si)
 
         # power it on
         vm_poweron(vm_name, si)
+
+        # create any filesystems on additional disks
+        vm_process_disks(ipaddress,
+                         args.VM_USERNAME,
+                         args.VM_PASSWORD,
+                         added)
 
     # just a short sleep here. This allows the VM to get started booting
     time.sleep(60)
