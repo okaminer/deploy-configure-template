@@ -315,7 +315,19 @@ def vm_add_disks(vm_name, disks, si):
     return added_disks
 
 def vm_create_mount_filesystem(ipaddr, username, password, device, mount):
-    command = 'uptime'
+    # we will create one big partitioon on the disk
+    partition = device+"1"
+    _commands = []
+    _commands.append("echo \";\" | sfdisk {}".format(device))
+    _commands.append("mkfs {}".format(partition))
+    _commands.append("if [ ! -d {} ]; then mkdir -p {}; fi".format(mount, mount))
+    _commands.append("mount {} {}".format(partition, mount))
+    for cmd in _commands:
+        node_execute_command(ipaddr, username, password, cmd)
+
+    command="blkid -o value -s UUID {}".format(partition)
+    uuid = node_execute_command(ipaddr, username, password, command)
+    command="echo \"UUID={} {} ext4 defaults 0 0 \" >> /etc/fstab".format(uuid, mount)
     node_execute_command(ipaddr, username, password, command)
     return
 
@@ -368,7 +380,7 @@ def node_execute_command(ipaddr, username, password, command, numTries=60):
     if rc is not 0:
         print("error running: [%s] %s" % (ipaddr, command))
         raise SSHCommandFailedException(command)
-    return output
+    return output.strip()
 
 def setup_node(ipaddr, username, password, args):
     """
