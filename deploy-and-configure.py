@@ -418,7 +418,7 @@ def setup_node(ipaddr, username, password, args):
 def setup_postconfig(ipaddr, username, password, args):
     _commands = []
     _commands.append("apt-get install -y sshpass || yum install -y sshpass")
-    _commands.append("ssh-keygen -t rsa -b 2048 -f ~/.ssh/id_rsa -N \"passphrase\"")
+    _commands.append("ssh-keygen -t rsa -b 2048 -f ~/.ssh/id_rsa -N \"\"")
     _commands.append("cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys")
     _commands.append("chmod 0600 ~/.ssh/*")
     for ip in args.VM_IP:
