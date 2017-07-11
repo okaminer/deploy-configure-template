@@ -389,6 +389,7 @@ def setup_node(ipaddr, username, password, args):
     """
     _commands=[]
     _commands.append('uptime')
+    _commands.append('if [ ! -d /root/.ssh ]; then mkdir /root/.ssh; fi')
     _commands.append('rpm -iUvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm || true')
     _commands.append('apt-get install -y ansible '
                      ' || '
@@ -400,6 +401,16 @@ def setup_node(ipaddr, username, password, args):
             hostname = get_hostname(args.VM_PREFIX, ipaddress)
             command = "echo \"{0} {1} {2}.{3}\" >> /etc/hosts"
             command = command.format(ipaddress, hostname, hostname, args.DOMAIN[0])
+            _commands.append(command)
+
+    # setup the ssh config file to ignore strict keys for these nodes
+    for ipaddress in args.VM_IP:
+        if ipaddress != ipaddr:
+            command = "echo \"Host {} \" >> /root/.ssh/config".format(ipaddress)
+            _commands.append(command)
+            command = "echo \"   StrictHostKeyChecking no\" >> /root/.ssh/config"
+            _commands.append(command)
+            command = "echo \"   UserKnownHostsFile /dev/null\" >> /root/.ssh/config"
             _commands.append(command)
 
     for cmd in _commands:
