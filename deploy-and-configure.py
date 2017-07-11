@@ -405,18 +405,26 @@ def setup_node(ipaddr, username, password, args):
 
     # setup the ssh config file to ignore strict keys for these nodes
     for ipaddress in args.VM_IP:
-        if ipaddress != ipaddr:
-            command = "echo \"Host {} \" >> /root/.ssh/config".format(ipaddress)
-            _commands.append(command)
-            command = "echo \"   StrictHostKeyChecking no\" >> /root/.ssh/config"
-            _commands.append(command)
-            command = "echo \"   UserKnownHostsFile /dev/null\" >> /root/.ssh/config"
-            _commands.append(command)
+        command = "echo \"Host {} \" >> /root/.ssh/config".format(ipaddress)
+        _commands.append(command)
+        command = "echo \"   StrictHostKeyChecking no\" >> /root/.ssh/config"
+        _commands.append(command)
+        command = "echo \"   UserKnownHostsFile /dev/null\" >> /root/.ssh/config"
+        _commands.append(command)
 
     for cmd in _commands:
         node_execute_command(ipaddr, username, password, cmd)
 
-
+def setup_postconfig(ipaddr, username, password, args):
+    _commands = []
+    _commands.append("apt-get install -y sshpass || yum install -y sshpass")
+    _commands.append("ssh-keygen -t rsa -b 2048 -f ~/.ssh/id_rsa -N \"passphrase\"")
+    _commands.append("chmod 0600 ~/.ssh/id_rsa ~/.ssh/id_rsa.pub")
+    for ip in args.IP:
+        if ip != ipaddr:
+            _commands.append("sshpass -p {} scp -r ~/.ssh root@{}:/root".format(password, ip))
+    for cmd in _commands:
+        node_execute_command(ipaddr, username, password, cmd)
 
 def main():
     """
@@ -482,6 +490,8 @@ def main():
                    args.VM_USERNAME,
                    args.VM_PASSWORD,
                    args)
+
+    setup_postconfig(args.VM_IP[0], args.VM_USERNAME, args.VM_PASSWORD, args)
 
 # Start program
 if __name__ == "__main__":
