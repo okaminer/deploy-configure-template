@@ -419,7 +419,8 @@ def setup_postconfig(ipaddr, username, password, args):
     _commands = []
     _commands.append("apt-get install -y sshpass || yum install -y sshpass")
     _commands.append("ssh-keygen -t rsa -b 2048 -f ~/.ssh/id_rsa -N \"passphrase\"")
-    _commands.append("chmod 0600 ~/.ssh/id_rsa ~/.ssh/id_rsa.pub")
+    _commands.append("cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys")
+    _commands.append("chmod 0600 ~/.ssh/*")
     for ip in args.VM_IP:
         if ip != ipaddr:
             _commands.append("sshpass -p {} scp -r ~/.ssh root@{}:/root".format(password, ip))
