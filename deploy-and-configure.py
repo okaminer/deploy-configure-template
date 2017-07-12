@@ -391,9 +391,9 @@ def setup_node(ipaddr, username, password, args):
     _commands.append('uptime')
     _commands.append('if [ ! -d /root/.ssh ]; then mkdir /root/.ssh; fi')
     _commands.append('rpm -iUvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm || true')
-    _commands.append('apt-get install -y ansible '
-                     ' || '
-                     'yum install -y ansible')
+    #_commands.append('apt-get install -y ansible '
+    #                 ' || '
+    #                 'yum install -y ansible')
 
     # add all the nodes to each nodes /etc/hosts file
     for ipaddress in args.VM_IP:
