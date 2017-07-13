@@ -187,8 +187,8 @@ def choose_datastore(datastores, si):
 
     for ds_name in datastores:
         datastore = get_obj(si.RetrieveContent(), [vim.Datastore], ds_name)
+        print("Datastore {}: {} free".format(datastore.summary.name, sizeof_fmt(datastore.summary.freeSpace)))
         if datastore.summary.freeSpace > selected_datastore_size:
-            print("Datastore {}: {} free".format(datastore.summary.name, sizeof_fmt(datastore.summary.freeSpace)))
             selected_datastore_name = datastore.summary.name
             selected_datastore_size = datastore.summary.freeSpace
 
