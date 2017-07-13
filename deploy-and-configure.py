@@ -128,7 +128,13 @@ def vm_delete(name, si):
     """
     Delete a vm based upon it's name
     """
-    vm = get_obj(si.RetrieveContent(), [vim.VirtualMachine], name)
+    try:
+        # some versions of esx will cause an exception if the vm is not found
+        vm = get_obj(si.RetrieveContent(), [vim.VirtualMachine], name)
+    except:
+        vm = None
+        pass
+
     if vm is None:
         return
 
