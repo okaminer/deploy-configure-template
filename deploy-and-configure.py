@@ -411,6 +411,16 @@ def setup_node(ipaddr, username, password, args):
         _commands.append(command)
         command = "echo \"   UserKnownHostsFile /dev/null\" >> /root/.ssh/config"
         _commands.append(command)
+        command = "echo \"\" >> /root/.ssh/config"
+        _commands.append(command)
+        command = "echo \"Host {} \" >> /root/.ssh/config".format(get_hostname(args.VM_PREFIX, ipaddress))
+        _commands.append(command)
+        command = "echo \"   StrictHostKeyChecking no\" >> /root/.ssh/config"
+        _commands.append(command)
+        command = "echo \"   UserKnownHostsFile /dev/null\" >> /root/.ssh/config"
+        _commands.append(command)
+        command = "echo \"\" >> /root/.ssh/config"
+        _commands.append(command)
 
     for cmd in _commands:
         node_execute_command(ipaddr, username, password, cmd)
