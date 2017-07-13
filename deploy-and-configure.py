@@ -42,7 +42,7 @@ def setup_arguments():
                         help='Template to clone')
     parser.add_argument('--folder', dest='FOLDER', action='store', required=True,
                         help='Destination folder for the VM')
-    parser.add_argument('--datastore', dest='DATASTORE', action='store',
+    parser.add_argument('--datastore', dest='DATASTORE', action='store', nargs='*',
                         help='Destination datastore for the VM')
     parser.add_argument('--host', dest='HOST', action='store',
                         help='Destination ESXi host for the VM')
@@ -70,7 +70,6 @@ def get_obj(content, vimtype, name):
             obj = c
             break
     return obj
-
 
 def get_all_objs(content, vimtype):
     """
@@ -161,6 +160,40 @@ def vm_poweron(name, si):
         task = vm.PowerOnVM_Task()
         wait_for_task(task, si)
 
+def sizeof_fmt(num):
+    """
+    Returns the human readable version of a file size
+
+    :param num:
+    :return:
+    """
+    for item in ['bytes', 'KB', 'MB', 'GB']:
+        if num < 1024.0:
+            return "%3.1f%s" % (num, item)
+        num /= 1024.0
+    return "%3.1f%s" % (num, 'TB')
+
+def choose_datastore(datastores, si):
+    """
+    Choose a datastore from a list
+
+    Initial implementation simply picks the datastore with the most free space
+    """
+    if len(datastores)==1:
+        return datastores[0]
+
+    selected_datastore_name = None
+    selected_datastore_size = 0
+
+    for ds_name in datastores:
+        datastore = get_obj(si.RetrieveContent(), [vim.Datastore], ds_name)
+        if datastore.summary.freeSpace > selected_datastore_size:
+            print("Datastore {}: {} free".format(datastore.summary.name, sizeof_fmt(datastore.summary.freeSpace)))
+            selected_datastore_name = datastore.summary.name
+            selected_datastore_size = datastore.summary.freeSpace
+
+    print("Datastore {} has the most free space".format(selected_datastore_name))
+    return selected_datastore_name
 
 def template_clone(name, vm_name, args, si):
     """
@@ -189,7 +222,8 @@ def template_clone(name, vm_name, args, si):
         relocateSpec.host = host
     # if the datastore was specified, set it in the relocate spec
     if args.DATASTORE is not None:
-        datastore = get_obj(si.RetrieveContent(), [vim.Datastore], args.DATASTORE)
+        chosen_datastore = choose_datastore(args.DATASTORE, si)
+        datastore = get_obj(si.RetrieveContent(), [vim.Datastore], chosen_datastore)
         relocateSpec.datastore = datastore
 
     vmconf = vim.vm.ConfigSpec()
