@@ -139,8 +139,13 @@ def vm_delete(name, si):
 
     if vm.runtime.powerState != 'poweredOff':
         print("Powering off VM: %s" % name)
-        task = vm.PowerOffVM_Task()
-        wait_for_task(task, si)
+        try:
+            # it is possible that the poweroff will fail as the VM is off
+            # we can ignore errors here
+            task = vm.PowerOffVM_Task()
+            wait_for_task(task, si)
+        except:
+            pass
 
     print("Deleting existing VM: %s" % name)
     task = vm.Destroy_Task()
