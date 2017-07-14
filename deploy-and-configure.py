@@ -43,7 +43,7 @@ def setup_arguments():
     parser.add_argument('--folder', dest='FOLDER', action='store', required=True,
                         help='Destination folder for the VM')
     parser.add_argument('--datastore', dest='DATASTORE', action='store', nargs='*',
-                        help='Destination datastore for the VM')
+                        help='Possible datastores for the VM, will use the DS with the most free space')
     parser.add_argument('--host', dest='HOST', action='store',
                         help='Destination ESXi host for the VM')
     parser.add_argument('--resourcepool', dest='RESOURCEPOOL', action='store',
@@ -149,6 +149,7 @@ def vm_delete(name, si):
         except:
             pass
 
+    time.sleep(30)
     print("Deleting existing VM: %s" % name)
     task = vm.Destroy_Task()
     wait_for_task(task, si)
