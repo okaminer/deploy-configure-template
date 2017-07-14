@@ -119,7 +119,6 @@ def vm_poweroff(ipaddr, username, password):
         node_execute_command(ipaddr, username, password,
                            'shutdown -h now', numTries=2)
         print("Allowing time for VM to shutdown")
-        time.sleep(30)
     except:
         pass
 
@@ -149,7 +148,6 @@ def vm_delete(name, si):
         except:
             pass
 
-    time.sleep(30)
     print("Deleting existing VM: %s" % name)
     task = vm.Destroy_Task()
     wait_for_task(task, si)
@@ -506,16 +504,27 @@ def main():
 
     print("Connected to %s" % args.VCENTER)
 
+    time.sleep(30)
+    print("Trying to cleanly shut all nodes down")
+    for ipaddress in args.VM_IP:
+        print("=> Shutting down %s" % ipaddress)
+        vm_poweroff(ipaddress, args.VM_USERNAME, args.VM_PASSWORD)
+
+    time.sleep(30)
+    print("Deleting any existing VMs")
+    for ipaddress in args.VM_IP:
+        print("=> Looking for and deleting %s" % ipaddress)
+        # work on the services VM
+        vm_name=get_hostname(args.VM_PREFIX, ipaddress)
+        # delete existing vm
+        vm_delete(vm_name, si)
+
+    time.sleep(30)
+    print("Cloning the template to new VMs")
     for ipaddress in args.VM_IP:
         print("Working on %s" % ipaddress)
         # work on the services VM
         vm_name=get_hostname(args.VM_PREFIX, ipaddress)
-
-        vm_poweroff(ipaddress, args.VM_USERNAME, args.VM_PASSWORD)
-
-        # delete existing vm
-        vm_delete(vm_name, si)
-
         # try to clone
         template_clone(args.TEMPLATE, vm_name, args, si)
 
