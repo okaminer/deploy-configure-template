@@ -118,6 +118,8 @@ def vm_poweroff(ipaddr, username, password):
         print("Powering off %s" % ipaddr)
         node_execute_command(ipaddr, username, password,
                            'shutdown -h now', numTries=2)
+        print("Allowing time for VM to shutdown")
+        time.sleep(30)
     except:
         pass
 
