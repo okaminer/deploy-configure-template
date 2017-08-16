@@ -55,6 +55,12 @@ def setup_arguments():
     parser.add_argument('--extra_disks', dest='EXTRA_DISKS', action='store', nargs='*',
                         help='Space separated sizes:mountpoints for additional disks to create, specified in GB')
 
+    # testing some network changes
+    parser.add_argument('--network_name', action='store',
+                        help='Network to place the VM on')
+    parser.add_argument('--is_VDS', action='store_true', default=False,
+                        help='set to true if the network is on a VDS')
+
     # return the parser object
     return parser
 
@@ -245,6 +251,71 @@ def template_clone(name, vm_name, args, si):
     folder = get_obj(si.RetrieveContent(), [vim.Folder], args.FOLDER)
     clone = template.Clone(name=vm_name, folder=folder, spec=clonespec)
     wait_for_task(clone, si)
+
+def set_network(vm_name, args, si):
+    """
+    Simple method for changing network virtual machines NIC.
+    """
+
+    print("Reconfiguring the network for VM: %s" % vm_name)
+
+    vm = get_obj(si.RetrieveContent(), [vim.VirtualMachine], vm_name)
+    if vm is None:
+        print("Error: Unable to find VM")
+        sys.exit()
+
+    if vm.runtime.powerState != 'poweredOff':
+        print("Error. The VM must be off before reconfiguring")
+        sys.exit()
+
+    try:
+        # This code is for changing only one Interface. For multiple Interface
+        # Iterate through a loop of network names.
+        device_change = []
+        for device in vm.config.hardware.device:
+            if isinstance(device, vim.vm.device.VirtualEthernetCard):
+                nicspec = vim.vm.device.VirtualDeviceSpec()
+                nicspec.operation = \
+                    vim.vm.device.VirtualDeviceSpec.Operation.edit
+                nicspec.device = device
+                nicspec.device.wakeOnLanEnabled = True
+
+                if not args.is_VDS:
+                    nicspec.device.backing = \
+                        vim.vm.device.VirtualEthernetCard.NetworkBackingInfo()
+                    nicspec.device.backing.network = \
+                        get_obj(si.RetrieveContent(), [vim.Network], args.network_name)
+                    nicspec.device.backing.deviceName = args.network_name
+                else:
+                    network = get_obj(si.RetrieveContent(),
+                                      [vim.dvs.DistributedVirtualPortgroup],
+                                      args.network_name)
+                    dvs_port_connection = vim.dvs.PortConnection()
+                    dvs_port_connection.portgroupKey = network.key
+                    dvs_port_connection.switchUuid = \
+                        network.config.distributedVirtualSwitch.uuid
+                    nicspec.device.backing = \
+                        vim.vm.device.VirtualEthernetCard. \
+                        DistributedVirtualPortBackingInfo()
+                    nicspec.device.backing.port = dvs_port_connection
+
+                nicspec.device.connectable = \
+                    vim.vm.device.VirtualDevice.ConnectInfo()
+                nicspec.device.connectable.startConnected = True
+                nicspec.device.connectable.allowGuestControl = True
+                device_change.append(nicspec)
+                break
+
+        config_spec = vim.vm.ConfigSpec(deviceChange=device_change)
+        task = vm.ReconfigVM_Task(config_spec)
+        wait_for_task(task, si)
+        print "Successfully changed network"
+
+    except vmodl.MethodFault as error:
+        print "Caught vmodl fault : " + error.msg
+        return -1
+
+    return 0
 
 def vm_configure(vm_name, ip, subnet, gateway, dns, domain, si):
     """
@@ -516,9 +587,8 @@ def main():
     time.sleep(30)
     print("Deleting any existing VMs")
     for ipaddress in args.VM_IP:
-        print("=> Looking for and deleting %s" % ipaddress)
-        # work on the services VM
         vm_name=get_hostname(args.VM_PREFIX, ipaddress)
+        print("=> Looking for and deleting %s" % vm_name)
         # delete existing vm
         vm_delete(vm_name, si)
 
@@ -530,6 +600,8 @@ def main():
         vm_name=get_hostname(args.VM_PREFIX, ipaddress)
         # try to clone
         template_clone(args.TEMPLATE, vm_name, args, si)
+
+        set_network(vm_name, args, si)
 
         # configure the vm
         vm_configure(vm_name,
