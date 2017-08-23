@@ -509,10 +509,10 @@ def setup_node(ipaddr, username, password, args):
     """
     _commands=[]
     _commands.append('uptime')
-    _commands.appemd('systemctl stop firewalld || true')
-    _commands.appemd('systemctl disable firewalld || true')
-    _commands.appemd('systemctl stop iptables || true')
-    _commands.appemd('systemctl disable iptables || true')
+    _commands.append('systemctl stop firewalld || true')
+    _commands.append('systemctl disable firewalld || true')
+    _commands.append('systemctl stop iptables || true')
+    _commands.append('systemctl disable iptables || true')
     _commands.append('if [ ! -d /root/.ssh ]; then mkdir /root/.ssh; fi')
     _commands.append('rpm -iUvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm || true')
     #_commands.append('apt-get install -y ansible '
