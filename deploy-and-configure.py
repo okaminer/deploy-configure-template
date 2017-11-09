@@ -123,7 +123,7 @@ def vm_poweroff(ipaddr, username, password):
     try:
         print("Powering off %s" % ipaddr)
         node_execute_command(ipaddr, username, password,
-                           'shutdown -h now', numTries=2)
+                           'shutdown -h now', numTries=1)
         print("Allowing time for VM to shutdown")
     except:
         pass
@@ -140,9 +140,6 @@ def vm_delete(name, si):
     except:
         vm = None
         pass
-
-    if vm is None:
-        vm = get_obj(si.RetrieveContent(), [vim.VirtualMachine], name)
 
     if vm is None:
         return
@@ -489,6 +486,30 @@ def get_hostname(prefix, ipaddr):
     vm_name=vm_name.replace(".", "-")
     return vm_name
 
+def wait_until_boot_complete(ipaddr, username, password):
+    """
+    Check if boot is complete by checking runlevel
+    """
+    command = '[[ `/sbin/runlevel | cut -d " " -f 2` == 5 ]]'
+    command = '/sbin/runlevel | cut -d " " -f 2'
+    attempt = 0
+    output = ""
+    desired = "3"
+    # print("Executing Command against %s: %s" % (ipaddr, command))
+    while (output != desired):
+        connection = SSHHelper()
+        connection.connect(ipaddr, username, password)
+        rc, output = connection.sendCommand(command, showoutput=False)
+        output = output.split()[0]
+        if output == desired:
+            break
+        attempt = attempt+1
+        if (attempt > 30):
+            raise SSHCommandFailedException(command)
+        time.sleep(1)
+
+    print("boot appears to be complete")
+
 def node_execute_command(ipaddr, username, password, command, numTries=60):
     """
     Execute a command via ssh
@@ -578,13 +599,11 @@ def main():
 
     print("Connected to %s" % args.VCENTER)
 
-    time.sleep(30)
     print("Trying to cleanly shut all nodes down")
     for ipaddress in args.VM_IP:
         print("=> Shutting down %s" % ipaddress)
         vm_poweroff(ipaddress, args.VM_USERNAME, args.VM_PASSWORD)
 
-    time.sleep(30)
     print("Deleting any existing VMs")
     for ipaddress in args.VM_IP:
         vm_name=get_hostname(args.VM_PREFIX, ipaddress)
@@ -592,7 +611,6 @@ def main():
         # delete existing vm
         vm_delete(vm_name, si)
 
-    time.sleep(30)
     print("Cloning the template to new VMs")
     for ipaddress in args.VM_IP:
         print("Working on %s" % ipaddress)
@@ -618,14 +636,14 @@ def main():
         # power it on
         vm_poweron(vm_name, si)
 
+        wait_until_boot_complete(ipaddress,
+                                 args.VM_USERNAME,
+                                 args.VM_PASSWORD)
         # create any filesystems on additional disks
         vm_process_disks(ipaddress,
                          args.VM_USERNAME,
                          args.VM_PASSWORD,
                          added)
-
-    # just a short sleep here. This allows the VM to get started booting
-    time.sleep(60)
 
     for ipaddress in args.VM_IP:
         # perform some post clone setup

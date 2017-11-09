@@ -18,23 +18,26 @@ class SSHHelper:
             print("Trying to connect to %s (%i/%d)" % (address, i+1, numTries))
 
             try:
-                print("Connecting to server.")
                 self.client = paramiko.SSHClient()
                 self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-                self.client.connect(address, username=username, password=password, look_for_keys=False)
-                print("Connected to %s" % address)
+                self.client.connect(address,
+                                    username=username,
+                                    password=password,
+                                    timeout=5,
+                                    look_for_keys=False)
+                print("Connected.")
                 break
             except paramiko.AuthenticationException:
-                print("Authentication failed when connecting to %s" % address)
+                print("Authentication failed.")
                 sys.exit(1)
             except:
-                print("Could not SSH to %s, waiting for it to start" % address)
-                time.sleep(10)
                 # If we could not connect within time limit
                 i += 1
                 if i == numTries:
-                    print("Could not connect to %s. Giving up" % address)
+                    print("Could not connect. Giving up.")
                     raise
+                print("Could not connect. Will try again.")
+                time.sleep(5)
 
     def sendCommand(self, command, showoutput=False):
         if self.client:
