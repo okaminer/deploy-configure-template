@@ -496,12 +496,12 @@ def wait_until_boot_complete(ipaddr, username, password):
     output = ""
     desired = "3"
     # print("Executing Command against %s: %s" % (ipaddr, command))
-    while (output != desired):
+    while (True):
         connection = SSHHelper()
         connection.connect(ipaddr, username, password)
         rc, output = connection.sendCommand(command, showoutput=False)
         output = output.split()[0]
-        if output == desired:
+        if ( output == "3" or output == "5"):
             break
         attempt = attempt+1
         if (attempt > 30):
