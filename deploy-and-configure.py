@@ -478,6 +478,8 @@ def vm_process_disks(ipaddr, username, password, added_disks):
                                            disk[1])
             else:
                 print("Created raw device at %s" % (device))
+                command = 'echo "{}" >> /etc/raw-devices'.format(device)
+                node_execute_command(ipaddr, username, password, command)
 
 def get_hostname(prefix, ipaddr):
     """
