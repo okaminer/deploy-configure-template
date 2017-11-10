@@ -502,7 +502,9 @@ def wait_until_boot_complete(ipaddr, username, password):
         connection.connect(ipaddr, username, password)
         rc, output = connection.sendCommand(command, showoutput=False)
 	if output is not None:
-            output = output.split()[0]
+            temp = output.split()
+	    if len(temp)>0:
+            	output = temp[0]
         if ( output == "3" or output == "5"):
             break
         attempt = attempt+1
