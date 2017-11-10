@@ -125,6 +125,7 @@ def vm_poweroff(ipaddr, username, password):
         node_execute_command(ipaddr, username, password,
                            'shutdown -h now', numTries=1)
         print("Allowing time for VM to shutdown")
+        time.sleep(10)
     except:
         pass
 
@@ -500,7 +501,8 @@ def wait_until_boot_complete(ipaddr, username, password):
         connection = SSHHelper()
         connection.connect(ipaddr, username, password)
         rc, output = connection.sendCommand(command, showoutput=False)
-        output = output.split()[0]
+	if output is not None:
+            output = output.split()[0]
         if ( output == "3" or output == "5"):
             break
         attempt = attempt+1
@@ -599,17 +601,17 @@ def main():
 
     print("Connected to %s" % args.VCENTER)
 
-    print("Trying to cleanly shut all nodes down")
-    for ipaddress in args.VM_IP:
-        print("=> Shutting down %s" % ipaddress)
-        vm_poweroff(ipaddress, args.VM_USERNAME, args.VM_PASSWORD)
-
     print("Deleting any existing VMs")
     for ipaddress in args.VM_IP:
         vm_name=get_hostname(args.VM_PREFIX, ipaddress)
         print("=> Looking for and deleting %s" % vm_name)
         # delete existing vm
         vm_delete(vm_name, si)
+
+    print("Trying to cleanly shut all nodes down")
+    for ipaddress in args.VM_IP:
+        print("=> Shutting down %s" % ipaddress)
+        vm_poweroff(ipaddress, args.VM_USERNAME, args.VM_PASSWORD)
 
     print("Cloning the template to new VMs")
     for ipaddress in args.VM_IP:
