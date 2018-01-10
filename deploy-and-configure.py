@@ -55,6 +55,12 @@ def setup_arguments():
     parser.add_argument('--extra_disks', dest='EXTRA_DISKS', action='store', nargs='*',
                         help='Space separated sizes:mountpoints for additional disks to create, specified in GB')
 
+    # some OS settings
+    parser.add_argument('--git_user', action='store', default='',
+                        help='user.name for git settings')
+    parser.add_argument('--git_email', action='store', default='',
+                        help='user.email for git settings')
+
     # testing some network changes
     parser.add_argument('--network_name', action='store',
                         help='Network to place the VM on')
@@ -538,9 +544,13 @@ def setup_node(ipaddr, username, password, args):
     _commands.append('uptime')
     _commands.append('if [ ! -d /root/.ssh ]; then mkdir /root/.ssh; fi')
     _commands.append('rpm -iUvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm || true')
-    #_commands.append('apt-get install -y ansible '
-    #                 ' || '
-    #                 'yum install -y ansible')
+    # setup git
+    _commands.append('apt-get install -y git || yum install -y git')
+    if args.git_user != '':
+        _commands.append('git config --global user.name "{}"'.format(args.git_user))
+    if args.git_email != '':
+        _commands.append('git config --global user.email "{}"'.format(args.git_email))
+    _commands.append('git config --global credential.helper "cache --timeout=3600"')
 
     # add all the nodes to each nodes /etc/hosts file
     for ipaddress in args.VM_IP:
