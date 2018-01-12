@@ -3,12 +3,22 @@
 import atexit
 import argparse
 import ssl
+import sys
+import time
 
-from SSHHelper import *
+from ssh_paramiko import RemoteServer
 from pyVmomi import vim, vmodl
 from pyVim import connect
 from pyVim.connect import Disconnect, SmartConnect
 
+class UnableToConnectException(Exception):
+    message = "Unable to connect to Server"
+
+    def __init__(self, server):
+        self.details = {
+            "server": server,
+        }
+        super(UnableToConnectException, self).__init__(self.message, self.details)
 
 def setup_arguments():
     parser = argparse.ArgumentParser(description='Clone and configure a VM')
@@ -504,11 +514,13 @@ def wait_until_boot_complete(ipaddr, username, password):
     attempt = 0
     output = ""
     desired = "3"
-    # print("Executing Command against %s: %s" % (ipaddr, command))
+    # print("Executing against %s (%s, %s)" % (ipaddr, username, password))
     while (True):
-        connection = SSHHelper()
-        connection.connect(ipaddr, username, password)
-        rc, output = connection.sendCommand(command, showoutput=False)
+        output = node_execute_command(ipaddr,
+                                      username,
+                                      password,
+                                      command,
+                                      numTries=60)
 	if output is not None:
             temp = output.split()
 	    if len(temp)>0:
@@ -517,23 +529,52 @@ def wait_until_boot_complete(ipaddr, username, password):
             break
         attempt = attempt+1
         if (attempt > 30):
-            raise SSHCommandFailedException(command)
+            raise UnableToConnectException(command)
         time.sleep(1)
 
     print("boot appears to be complete")
 
-def node_execute_command(ipaddr, username, password, command, numTries=60):
+
+def node_execute_command(ipaddr, username, password, command, numTries=5):
     """
     Execute a command via ssh
     """
-    print("Executing Command against %s: %s" % (ipaddr, command))
-    connection = SSHHelper()
-    connection.connect(ipaddr, username, password, numTries=numTries)
-    rc, output = connection.sendCommand(command, showoutput=True)
-    if rc is not 0:
-        print("error running: [%s] %s" % (ipaddr, command))
-        raise SSHCommandFailedException(command)
-    return output.strip()
+    attempt=1
+    connected = False
+
+
+    while (attempt<=numTries and connected==False):
+        ssh = RemoteServer(None,
+                           username=username,
+                           password=password,
+                           log_folder='/tmp',
+                           server_has_dns=False)
+        print("Connecting to: %s" % (ipaddr))
+
+        try:
+            connected, err = ssh.connect_server(ipaddr, ping=False)
+        except Exception as e:
+            print("Unable to connect. Will try again.")
+            connected = False
+
+        if connected == False:
+            time.sleep(5)
+            attempt = attempt + 1
+
+    if connected == False:
+        raise UnableToConnectException(ipaddr)
+
+    print("Executing Command: %s" % (command))
+    rc, stdout, stderr = ssh.execute_cmd(command, timeout=None)
+    ssh.close_connection()
+
+    stdout.strip()
+    stderr.strip()
+
+    if rc is True:
+        print("%s" % stdout)
+
+    return stdout.strip()
 
 def setup_node(ipaddr, username, password, args):
     """
@@ -655,6 +696,7 @@ def main():
         wait_until_boot_complete(ipaddress,
                                  args.VM_USERNAME,
                                  args.VM_PASSWORD)
+
         # create any filesystems on additional disks
         vm_process_disks(ipaddress,
                          args.VM_USERNAME,
