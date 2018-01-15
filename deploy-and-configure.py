@@ -70,6 +70,8 @@ def setup_arguments():
                         help='user.name for git settings')
     parser.add_argument('--git_email', action='store', default='',
                         help='user.email for git settings')
+    parser.add_argument('--timeserver', action='store', default='pool.ntp.org',
+                        help='NTP server')
 
     # testing some network changes
     parser.add_argument('--network_name', action='store',
@@ -619,6 +621,16 @@ def setup_node(ipaddr, username, password, args):
         _commands.append(command)
         command = "echo \"\" >> /root/.ssh/config"
         _commands.append(command)
+
+    # setup ntp client
+    # for ubuntu, configure the /etc/systemd/timesyncd.conf file and restart services
+    ccc="if [ -f /etc/systemd/timesyncd.conf ]; then sed -i 's/#NTP.*/NTP={}/g' /etc/systemd/timesyncd.conf; systemctl restart systemd-timesyncd; fi".format(args.timeserver)
+    _commands.append(ccc)
+    # for centos
+    ccc="yum install -y ntp || true"
+    _commands.append(ccc)
+    ccc="if [ -f /etc/ntp.conf ]; then sed -i 's/server/#server/g' /etc/ntp.conf; echo 'server {} iburst' >> /etc/ntp.conf; systemctl restart ntpd; fi".format(args.timeserver)
+    _commands.append(ccc)
 
     for cmd in _commands:
         node_execute_command(ipaddr, username, password, cmd)
