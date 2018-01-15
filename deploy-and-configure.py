@@ -333,7 +333,7 @@ def set_network(vm_name, args, si):
 
     return 0
 
-def vm_configure(vm_name, ip, subnet, gateway, dns, domain, si):
+def vm_configure(vm_name, hostname, ip, subnet, gateway, dns, domain, si):
     """
     Configure a VM, requires open-vm-tools to be installed
     """
@@ -366,7 +366,7 @@ def vm_configure(vm_name, ip, subnet, gateway, dns, domain, si):
 
     # For Linux . For windows follow sysprep
     ident = vim.vm.customization.LinuxPrep(domain=domain[0],
-                                           hostName=vim.vm.customization.FixedName(name=vm_name))
+                                           hostName=vim.vm.customization.FixedName(name=hostname))
 
     customspec = vim.vm.customization.Specification()
     # For only one adapter
@@ -692,6 +692,7 @@ def main():
         print("Working on %s" % ipaddress)
         # work on the services VM
         vm_name=get_vmname(args.VM_PREFIX, ipaddress)
+        vm_host=get_hostname(args.VM_PREFIX, ipaddress)
         # try to clone
         template_clone(args.TEMPLATE, vm_name, args, si)
 
@@ -699,12 +700,13 @@ def main():
 
         # configure the vm
         vm_configure(vm_name,
-                    ipaddress,
-                    args.SUBNET,
-                    args.GATEWAY,
-                    args.DNS,
-                    args.DOMAIN,
-                    si)
+                     vm_host,
+                     ipaddress,
+                     args.SUBNET,
+                     args.GATEWAY,
+                     args.DNS,
+                     args.DOMAIN,
+                     si)
 
         # add any additional disks requested
         added = vm_add_disks(vm_name, args.EXTRA_DISKS, si)
