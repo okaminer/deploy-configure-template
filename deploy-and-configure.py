@@ -499,6 +499,13 @@ def vm_process_disks(ipaddr, username, password, added_disks):
                 command = 'echo "{}" >> /etc/raw-devices'.format(device)
                 node_execute_command(ipaddr, username, password, command)
 
+def get_vmname(prefix, ipaddr):
+    """
+    Format a hostname based on prefix and ip address
+    """
+    vm_name=prefix + "-" + ipaddr
+    return vm_name
+
 def get_hostname(prefix, ipaddr):
     """
     Format a hostname based on prefix and ip address
@@ -670,7 +677,7 @@ def main():
 
     print("Deleting any existing VMs")
     for ipaddress in args.VM_IP:
-        vm_name=get_hostname(args.VM_PREFIX, ipaddress)
+        vm_name=get_vmname(args.VM_PREFIX, ipaddress)
         print("=> Looking for and deleting %s" % vm_name)
         # delete existing vm
         vm_delete(vm_name, si)
@@ -684,7 +691,7 @@ def main():
     for ipaddress in args.VM_IP:
         print("Working on %s" % ipaddress)
         # work on the services VM
-        vm_name=get_hostname(args.VM_PREFIX, ipaddress)
+        vm_name=get_vmname(args.VM_PREFIX, ipaddress)
         # try to clone
         template_clone(args.TEMPLATE, vm_name, args, si)
 
