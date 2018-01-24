@@ -474,7 +474,7 @@ def vm_process_disks(ipaddr, username, password, added_disks):
     if added_disks is None:
         return
 
-    node_execute_command(ipaddr, username, password, 'apt-get install -y lsscsi || yum install -y lsscsi')
+    node_execute_command(ipaddr, username, password, 'apt-get install -y lsscsi || yum install -y lsscsi || zypper install -y lsscsi')
 
     for d in added_disks:
         # the disks will come in the form of size:mountpoint
@@ -593,9 +593,9 @@ def setup_node(ipaddr, username, password, args):
     _commands=[]
     _commands.append('uptime')
     _commands.append('if [ ! -d /root/.ssh ]; then mkdir /root/.ssh; fi')
-    _commands.append('rpm -iUvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm || true')
+    _commands.append('yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm || true')
     # setup git
-    _commands.append('apt-get install -y git || yum install -y git')
+    _commands.append('apt-get install -y git || yum install -y git || zypper install -y git-core')
     if args.git_user != '':
         _commands.append('git config --global user.name "{}"'.format(args.git_user))
     if args.git_email != '':
@@ -644,7 +644,7 @@ def setup_node(ipaddr, username, password, args):
 
 def setup_postconfig(ipaddr, username, password, args):
     _commands = []
-    _commands.append("apt-get install -y sshpass || yum install -y sshpass")
+    _commands.append("apt-get install -y sshpass || yum install -y sshpass || zypper install -y sshpass")
     _commands.append("ssh-keygen -t rsa -b 2048 -f ~/.ssh/id_rsa -N \"\"")
     _commands.append("cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys")
     _commands.append("chmod 0600 ~/.ssh/*")
