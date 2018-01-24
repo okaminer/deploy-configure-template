@@ -585,6 +585,26 @@ def node_execute_command(ipaddr, username, password, command, numTries=5):
 
     return stdout.strip()
 
+def sles_only_command(command):
+    platform_specific="if [ -f /etc/SuSE-release ]; then {}; fi".format(command)
+    return platform_specific
+
+def ubuntu_only_command(command):
+    platform_specific="if [ -f /etc/lsb-release ]; then {}; fi".format(command)
+    return platform_specific
+
+def centos_or_redhat_only_command(command):
+    platform_specific="if [ -f /etc/centos-release -o -f /etc/redhat-release ]; then {}; fi".format(command)
+    return platform_specific
+
+def centos_only_command(command):
+    platform_specific="if [ -f /etc/centos-release ]; then {}; fi".format(command)
+    return platform_specific
+
+def redhat_only_command(command):
+    platform_specific="if [ -f /etc/redhat-release ]; then {}; fi".format(command)
+    return platform_specific
+
 def setup_node(ipaddr, username, password, args):
     """
     Prepare a node
@@ -593,9 +613,11 @@ def setup_node(ipaddr, username, password, args):
     _commands=[]
     _commands.append('uptime')
     _commands.append('if [ ! -d /root/.ssh ]; then mkdir /root/.ssh; fi')
-    _commands.append('yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm || true')
+    _commands.append(centos_only_command('yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm'))
     # setup git
-    _commands.append('apt-get install -y git || yum install -y git || zypper install -y git-core')
+    _commands.append(centos_or_redhat_only_command('yum install -y git'))
+    _commands.append(ubuntu_only_command('apt-get install -y git'))
+    _commands.append(sles_only_command("zypper install -y git-core"))
     if args.git_user != '':
         _commands.append('git config --global user.name "{}"'.format(args.git_user))
     if args.git_email != '':
@@ -632,19 +654,23 @@ def setup_node(ipaddr, username, password, args):
     # setup ntp client
     # for ubuntu, configure the /etc/systemd/timesyncd.conf file and restart services
     ccc="if [ -f /etc/systemd/timesyncd.conf ]; then sed -i 's/#NTP.*/NTP={}/g' /etc/systemd/timesyncd.conf; systemctl restart systemd-timesyncd; fi".format(args.timeserver)
-    _commands.append(ccc)
-    # for centos
+    _commands.append(ubuntu_only_command(ccc))
+    # for centos and redhat
     ccc="yum install -y ntp || true"
-    _commands.append(ccc)
+    _commands.append(centos_or_redhat_only_command(ccc))
     ccc="if [ -f /etc/ntp.conf ]; then sed -i 's/server/#server/g' /etc/ntp.conf; echo 'server {} iburst' >> /etc/ntp.conf; systemctl restart ntpd; fi".format(args.timeserver)
-    _commands.append(ccc)
+    _commands.append(centos_or_redhat_only_command(ccc))
 
     for cmd in _commands:
         node_execute_command(ipaddr, username, password, cmd)
 
 def setup_postconfig(ipaddr, username, password, args):
     _commands = []
-    _commands.append("apt-get install -y sshpass || yum install -y sshpass || zypper install -y sshpass")
+    _commands.append(sles_only_command("zypper addrepo https://download.opensuse.org/repositories/network/SLE_12_SP3/network.repo"))
+    _commands.append(sles_only_command("zypper --gpg-auto-import-keys refresh"))
+    _commands.append(ubuntu_only_command("apt-get install -y sshpass"))
+    _commands.append(centos_or_redhat_only_command("yum install -y sshpass"))
+    _commands.append(sles_only_command("zypper install -y sshpass"))
     _commands.append("ssh-keygen -t rsa -b 2048 -f ~/.ssh/id_rsa -N \"\"")
     _commands.append("cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys")
     _commands.append("chmod 0600 ~/.ssh/*")
