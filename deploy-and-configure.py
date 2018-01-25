@@ -474,7 +474,9 @@ def vm_process_disks(ipaddr, username, password, added_disks):
     if added_disks is None:
         return
 
-    node_execute_command(ipaddr, username, password, 'apt-get install -y lsscsi || yum install -y lsscsi || zypper install -y lsscsi')
+    node_execute_command(ipaddr, username, password, sles_only_command('zypper install -y lsscsi'))
+    node_execute_command(ipaddr, username, password, ubuntu_only_command('apt-get install -y lsscsi'))
+    node_execute_command(ipaddr, username, password, centos_or_redhat_only_command('yum install -y lsscsi'))
 
     for d in added_disks:
         # the disks will come in the form of size:mountpoint
