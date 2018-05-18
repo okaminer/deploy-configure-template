@@ -686,8 +686,9 @@ def main():
     """
     Main logic
     """
-    context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
-    context.verify_mode = ssl.CERT_NONE
+    #context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+    #context.verify_mode = ssl.CERT_NONE
+    context = ssl._create_unverified_context()
 
     parser = setup_arguments()
     args = parser.parse_args()
